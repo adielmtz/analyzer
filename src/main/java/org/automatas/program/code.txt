@@ -1,6 +1,81 @@
-x := 10;
+// Line comment
 
-print x + 1;
-print "\n";
+/*
+  Block comment
+ */
 
+/**
+ * Doc comment
+ */
+ 
+// Variables:
+myvar := 10; // Declaration. Throws error if 'myvar' is already defined.
+myvar = 2;   // Assignment.  Throws error if 'myvar' is undefined.
+unset myvar; // Var destroy. Returns true if 'myvar' was defined.
+
+// Types:
+string := "abc";
+int    := 40;       // java.lang.Long
+float  := 3.141592; // java.lang.Double
+bool   := true;
+
+// Print statement:
+print string;
 print "waah!\n";
+
+// Arithmetic operations:
+addition       := x + 2;
+concatenation  := "hello" + " agent " + 47;
+subtraction    := 5 - 10;
+multiplication := 9 * 23;
+power          := 2 ** 64;
+division       := 4 / 2;
+modulus        := 10 % 2;
+
+// Logic operators (returns boolean)
+and         := true && false;
+or          := false || true;
+equals      := 1 == 1;
+notequals   := 1 != 0;
+less        := 1 < 0;
+greater     := 1 > 0;
+lessOrEq    := 1 <= 0;
+greaterOrEq := 1 >= 0;
+
+// Increment/Decrement:
+preIncrement  := 0;
+postIncrement := 0;
+preDecrement  := 0;
+postDecrement := 0;
+
+print ++preIncrement;
+print postIncrement++;
+
+print --preDecrement;
+print postDecrement--;
+
+// If statement
+if true {
+    print "is true!\n";
+}
+
+name := "foo"
+if name == "foo" {
+    print "Foo found!\n";
+} else {
+    print "Bar found?\n";
+}
+
+// For loop
+for i := 0; i < 10; i++ {
+    print i;
+    print "\n";
+}
+
+// While loop
+var := 100;
+while var > 0 {
+    print var;
+    print "\n";
+    var--;
+}
