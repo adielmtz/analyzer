@@ -20,7 +20,7 @@ public final class Scalar implements Comparable<Scalar> {
         return new Scalar(value, ScalarType.IS_STRING);
     }
 
-    public Scalar(Object value, ScalarType type) {
+    private Scalar(Object value, ScalarType type) {
         this.value = value;
         this.type = type;
     }

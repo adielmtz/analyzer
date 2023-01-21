@@ -59,7 +59,7 @@ import java.util.Stack;
     }
 
     private Symbol bool(boolean value) {
-        return symbol(String.valueOf(value), Token.BOOL, new Scalar(value, ScalarType.IS_BOOL));
+        return symbol(String.valueOf(value), Token.BOOL, Scalar.fromBool(value));
     }
 
     private Symbol integer(String text, int base) {
@@ -69,18 +69,18 @@ import java.util.Stack;
         }
 
         long number = Long.parseLong(text, base);
-        Scalar result = new Scalar(number, ScalarType.IS_INTEGER);
+        Scalar result = Scalar.fromInteger(number);
         return symbol("integer", Token.INTEGER, result);
     }
 
     private Symbol decimal(String text) {
         double number = Double.parseDouble(text);
-        Scalar result = new Scalar(number, ScalarType.IS_FLOAT);
+        Scalar result = Scalar.fromFloat(number);
         return symbol("float", Token.FLOAT, result);
     }
 
     private Symbol text(int kind, String value) {
-        Scalar result = new Scalar(value, ScalarType.IS_STRING);
+        Scalar result = Scalar.fromString(value);
         return symbol(kind, result);
     }
 
