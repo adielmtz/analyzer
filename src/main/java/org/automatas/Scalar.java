@@ -43,15 +43,15 @@ public final class Scalar implements Comparable<Scalar> {
 
     @Override
     public String toString() {
-        return getString();
+        return asString();
     }
 
     @Override
     public int compareTo(Scalar o) {
         return switch (type) {
-            case IS_BOOL, IS_INTEGER -> Long.compare(getInteger(), o.getInteger());
-            case IS_FLOAT -> Double.compare(getFloat(), o.getFloat());
-            case IS_STRING -> getString().compareTo(o.getString());
+            case IS_BOOL, IS_INTEGER -> Long.compare(asInteger(), o.asInteger());
+            case IS_FLOAT -> Double.compare(asFloat(), o.asFloat());
+            case IS_STRING -> asString().compareTo(o.asString());
         };
     }
 
@@ -59,10 +59,10 @@ public final class Scalar implements Comparable<Scalar> {
     public boolean equals(Object obj) {
         if (obj instanceof Scalar s) {
             return switch (type) {
-                case IS_BOOL -> getBool() == s.getBool();
-                case IS_FLOAT -> getFloat() == s.getFloat();
-                case IS_INTEGER -> getInteger() == s.getInteger();
-                case IS_STRING -> getString().contentEquals(s.getString());
+                case IS_BOOL -> asBool() == s.asBool();
+                case IS_FLOAT -> asFloat() == s.asFloat();
+                case IS_INTEGER -> asInteger() == s.asInteger();
+                case IS_STRING -> asString().contentEquals(s.asString());
             };
         }
 
@@ -73,7 +73,7 @@ public final class Scalar implements Comparable<Scalar> {
         return type;
     }
 
-    public boolean getBool() {
+    public boolean asBool() {
         return switch (type) {
             case IS_BOOL -> (boolean) value;
             case IS_FLOAT -> (double) value != 0.d;
@@ -82,7 +82,7 @@ public final class Scalar implements Comparable<Scalar> {
         };
     }
 
-    public double getFloat() {
+    public double asFloat() {
         return switch (type) {
             case IS_BOOL -> (boolean) value ? 1 : 0;
             case IS_FLOAT-> (double) value;
@@ -91,7 +91,7 @@ public final class Scalar implements Comparable<Scalar> {
         };
     }
 
-    public long getInteger() {
+    public long asInteger() {
         return switch (type) {
             case IS_BOOL -> (boolean) value ? 1 : 0;
             case IS_FLOAT -> (long) ((double) value);
@@ -100,7 +100,7 @@ public final class Scalar implements Comparable<Scalar> {
         };
     }
 
-    public String getString() {
+    public String asString() {
         return String.valueOf(value);
     }
 }

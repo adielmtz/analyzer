@@ -122,7 +122,7 @@ public class Executor {
         assert ast.child.length == 0;
         assert ast.kind == AstKind.AST_IDENTIFIER;
 
-        String id = ast.value.getString();
+        String id = ast.value.asString();
         if (!identifiers.containsKey(id)) {
             fatalError("Unkown identifier '%s'.", id);
         }
@@ -141,7 +141,7 @@ public class Executor {
             fatalError("Expression '%s' cannot be declared as variable name.", var.kind);
         }
 
-        String id = var.value.getString();
+        String id = var.value.asString();
         if (identifiers.containsKey(id)) {
             fatalError("Variable '%s' is already defined", id);
         }
@@ -169,7 +169,7 @@ public class Executor {
             fatalError("Expression '%s' is not a valid variable name.", var.kind);
         }
 
-        String id = var.value.getString();
+        String id = var.value.asString();
         if (!identifiers.containsKey(id)) {
             fatalError("Variable '%s' is not defined.", id);
         }
@@ -199,7 +199,7 @@ public class Executor {
             fatalError("Unexpected operand '%s'.", lhs.kind);
         }
 
-        if (!op1.getValue().getBool()) {
+        if (!op1.getValue().asBool()) {
             // false && ??
             // expression is evaluates to false
             result.setType(OpResult.ResultType.CONSTANT);
@@ -216,7 +216,7 @@ public class Executor {
 
         // true && ??
         result.setType(OpResult.ResultType.CONSTANT);
-        result.setValue(Scalar.fromBool(op2.getValue().getBool()));
+        result.setValue(Scalar.fromBool(op2.getValue().asBool()));
     }
 
     private void executeOrOperator(Ast ast, OpResult result) {
@@ -232,7 +232,7 @@ public class Executor {
             fatalError("Unexpected operand '%s'.", lhs.kind);
         }
 
-        if (op1.getValue().getBool()) {
+        if (op1.getValue().asBool()) {
             // true || ??
             // expression is evaluates to true
             result.setType(OpResult.ResultType.CONSTANT);
@@ -249,7 +249,7 @@ public class Executor {
 
         // false || ??
         result.setType(OpResult.ResultType.CONSTANT);
-        result.setValue(Scalar.fromBool(op2.getValue().getBool()));
+        result.setValue(Scalar.fromBool(op2.getValue().asBool()));
     }
 
     private void executeValueComparison(Ast ast, OpResult result) {
@@ -291,12 +291,12 @@ public class Executor {
     private Scalar scalarAdd(Scalar a, Scalar b) {
         if (a.isString() || b.isString()) {
             // concatenate
-            return Scalar.fromString(a.getString() + b.getString());
+            return Scalar.fromString(a.asString() + b.asString());
         }
 
         return switch (a.getType()) {
-            case IS_FLOAT -> Scalar.fromFloat(a.getFloat() + b.getFloat());
-            case IS_BOOL, IS_INTEGER -> Scalar.fromInteger(a.getInteger() + b.getInteger());
+            case IS_FLOAT -> Scalar.fromFloat(a.asFloat() + b.asFloat());
+            case IS_BOOL, IS_INTEGER -> Scalar.fromInteger(a.asInteger() + b.asInteger());
             default -> throw new IllegalStateException("Unexpected value: " + a.getType());
         };
     }
@@ -307,8 +307,8 @@ public class Executor {
         }
 
         return switch (a.getType()) {
-            case IS_FLOAT -> Scalar.fromFloat(a.getFloat() - b.getFloat());
-            case IS_BOOL, IS_INTEGER -> Scalar.fromInteger(a.getInteger() - b.getInteger());
+            case IS_FLOAT -> Scalar.fromFloat(a.asFloat() - b.asFloat());
+            case IS_BOOL, IS_INTEGER -> Scalar.fromInteger(a.asInteger() - b.asInteger());
             default -> throw new IllegalStateException("Unexpected value: " + a.getType());
         };
     }
@@ -319,8 +319,8 @@ public class Executor {
         }
 
         return switch (a.getType()) {
-            case IS_FLOAT -> Scalar.fromFloat(a.getFloat() * b.getFloat());
-            case IS_BOOL, IS_INTEGER -> Scalar.fromInteger(a.getInteger() * b.getInteger());
+            case IS_FLOAT -> Scalar.fromFloat(a.asFloat() * b.asFloat());
+            case IS_BOOL, IS_INTEGER -> Scalar.fromInteger(a.asInteger() * b.asInteger());
             default -> throw new IllegalStateException("Unexpected value: " + a.getType());
         };
     }
@@ -330,7 +330,7 @@ public class Executor {
             fatalError("Incompatible type string cannot be used as operand.");
         }
 
-        double result = Math.pow(a.getFloat(), b.getFloat());
+        double result = Math.pow(a.asFloat(), b.asFloat());
         if (a.isFloat() || b.isFloat()) {
             return Scalar.fromFloat(result);
         }
@@ -345,8 +345,8 @@ public class Executor {
         }
 
         return switch (a.getType()) {
-            case IS_FLOAT -> Scalar.fromFloat(a.getFloat() / b.getFloat());
-            case IS_BOOL, IS_INTEGER -> Scalar.fromInteger(a.getInteger() / b.getInteger());
+            case IS_FLOAT -> Scalar.fromFloat(a.asFloat() / b.asFloat());
+            case IS_BOOL, IS_INTEGER -> Scalar.fromInteger(a.asInteger() / b.asInteger());
             default -> throw new IllegalStateException("Unexpected value: " + a.getType());
         };
     }
@@ -357,8 +357,8 @@ public class Executor {
         }
 
         return switch (a.getType()) {
-            case IS_FLOAT -> Scalar.fromFloat(a.getFloat() % b.getFloat());
-            case IS_BOOL, IS_INTEGER -> Scalar.fromInteger(a.getInteger() % b.getInteger());
+            case IS_FLOAT -> Scalar.fromFloat(a.asFloat() % b.asFloat());
+            case IS_BOOL, IS_INTEGER -> Scalar.fromInteger(a.asInteger() % b.asInteger());
             default -> throw new IllegalStateException("Unexpected value: " + a.getType());
         };
     }
@@ -422,7 +422,7 @@ public class Executor {
             default -> throw new IllegalStateException("Unexpected value: " + ast.kind);
         };
 
-        identifiers.put(var.value.getString(), ret);
+        identifiers.put(var.value.asString(), ret);
         result.setType(OpResult.ResultType.CONSTANT);
         result.setValue(ret); // return new value
     }
@@ -450,7 +450,7 @@ public class Executor {
             default -> throw new IllegalStateException("Unexpected value: " + ast.kind);
         };
 
-        identifiers.put(var.value.getString(), ret);
+        identifiers.put(var.value.asString(), ret);
         result.setType(OpResult.ResultType.CONSTANT);
         result.setValue(val); // return old value
     }
@@ -483,7 +483,7 @@ public class Executor {
             fatalError("Expression '%s' cannot be unset.", var.kind);
         }
 
-        String id = var.value.getString();
+        String id = var.value.asString();
         boolean ret = identifiers.remove(id) != null;
 
         result.setType(OpResult.ResultType.CONSTANT);
@@ -502,7 +502,7 @@ public class Executor {
 
         boolean executed = false;
 
-        if (exprOp.getValue().getBool()) {
+        if (exprOp.getValue().asBool()) {
             var stmtOp = new OpResult();
             execute(stmt, stmtOp);
             executed = true;
@@ -522,7 +522,7 @@ public class Executor {
         execute(ifstmt, ifOp);
         assert ifOp.getType() == OpResult.ResultType.CONSTANT;
 
-        if (!ifOp.getValue().getBool()) {
+        if (!ifOp.getValue().asBool()) {
             var elseOp = new OpResult();
             execute(elstmt, elseOp);
         }
@@ -547,7 +547,7 @@ public class Executor {
         execute(decl, declOp);
         execute(cond, condOp);
 
-        while (condOp.getValue().getBool()) {
+        while (condOp.getValue().asBool()) {
             execute(stmt, stmtOp);
             execute(step, stepOp);
             execute(cond, condOp);
@@ -567,7 +567,7 @@ public class Executor {
         var stmtOp = new OpResult();
         execute(expr, exprOp);
 
-        while (exprOp.getValue().getBool()) {
+        while (exprOp.getValue().asBool()) {
             execute(stmt, stmtOp);
             execute(expr, exprOp);
         }
