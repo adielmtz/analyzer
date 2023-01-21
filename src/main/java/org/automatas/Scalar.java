@@ -101,6 +101,10 @@ public final class Scalar implements Comparable<Scalar> {
     }
 
     public String asString() {
+        if (type == ScalarType.IS_STRING) {
+            return (String) value;
+        }
+
         return String.valueOf(value);
     }
 }
