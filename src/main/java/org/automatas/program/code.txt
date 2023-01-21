@@ -7,24 +7,25 @@
 /**
  * Doc comment
  */
- 
+
 // Variables:
 myvar := 10; // Declaration. Throws error if 'myvar' is already defined.
 myvar = 2;   // Assignment.  Throws error if 'myvar' is undefined.
 unset myvar; // Var destroy. Returns true if 'myvar' was defined.
 
 // Types:
-string := "abc";
+string := "Waaah!"; // java.lang.String
 int    := 40;       // java.lang.Long
 float  := 3.141592; // java.lang.Double
-bool   := true;
+bool   := true;     // java.lang.Boolean
 
-// Print statement:
-print string;
-print "waah!\n";
+// Print statement
+print "no automatic newline\n";
+println string;
+println "string literal";
 
 // Arithmetic operations:
-addition       := x + 2;
+addition       := 5 + 2;
 concatenation  := "hello" + " agent " + 47;
 subtraction    := 5 - 10;
 multiplication := 9 * 23;
@@ -48,34 +49,33 @@ postIncrement := 0;
 preDecrement  := 0;
 postDecrement := 0;
 
-print ++preIncrement;
-print postIncrement++;
+println ++preIncrement;
+println postIncrement++;
 
-print --preDecrement;
-print postDecrement--;
+println --preDecrement;
+println postDecrement--;
 
 // If statement
 if true {
-    print "is true!\n";
+    println "is true!";
 }
 
-name := "foo"
+// If-else statement
+name := "foo";
 if name == "foo" {
-    print "Foo found!\n";
+    println "Foo found!";
 } else {
-    print "Bar found?\n";
+    println "Bar found?";
 }
 
 // For loop
 for i := 0; i < 10; i++ {
-    print i;
-    print "\n";
+    println i;
 }
 
 // While loop
 var := 100;
 while var > 0 {
-    print var;
-    print "\n";
+    println var;
     var--;
 }
