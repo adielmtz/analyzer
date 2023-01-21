@@ -105,6 +105,6 @@ public final class Scalar implements Comparable<Scalar> {
             return (String) value;
         }
 
-        return String.valueOf(value);
+        return value.toString();
     }
 }

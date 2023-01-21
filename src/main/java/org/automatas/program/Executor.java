@@ -76,6 +76,7 @@ public class Executor {
                 executePostDecInc(ast, result);
                 break;
             case AST_PRINT:
+            case AST_PRINTLN:
                 executePrint(ast, result);
                 break;
             case AST_UNSET:
@@ -467,8 +468,12 @@ public class Executor {
             fatalError("Expression '%s' cannot be printed.", expr.kind);
         }
 
-        Scalar value = op.getValue();
-        System.out.print(value.toString());
+        String value = op.getValue().asString();
+        System.out.print(value);
+
+        if (ast.kind == AstKind.AST_PRINTLN) {
+            System.out.println();
+        }
 
         result.setType(OpResult.ResultType.NONE);
         result.setValue(null);

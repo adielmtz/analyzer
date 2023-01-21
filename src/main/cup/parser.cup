@@ -22,7 +22,7 @@ terminal Ast ADD, MINUS, MULTIPLY, POW, DIVIDE, MODULUS;
 terminal AST INCREMENT, DECREMENT;
 
 /* Keywords */
-terminal Ast PRINT, UNSET;
+terminal Ast PRINT, PRINTLN, UNSET;
 terminal Ast FOR, WHILE;
 terminal Ast IF, ELSE;
 
@@ -68,6 +68,7 @@ if_statement ::=
 
 expr ::=
     PRINT expr:e                    {: RESULT = Ast.create(AstKind.AST_PRINT, e); :}
+  | PRINTLN expr:e                  {: RESULT = Ast.create(AstKind.AST_PRINTLN, e); :}
   | UNSET expr:e                    {: RESULT = Ast.create(AstKind.AST_UNSET, e); :}
   | expr:a DECLARATION expr:b       {: RESULT = Ast.create(AstKind.AST_DECLARATION, a, b); :}
   | expr:a ASSIGN expr:b            {: RESULT = Ast.create(AstKind.AST_ASSIGN, a, b); :}

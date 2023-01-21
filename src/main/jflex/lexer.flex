@@ -172,6 +172,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "true"           { return bool(true); }
 <YYINITIAL> "false"          { return bool(false); }
 <YYINITIAL> "print"          { return symbol("print", Token.PRINT); }
+<YYINITIAL> "println"        { return symbol("println", Token.PRINTLN); }
 <YYINITIAL> "unset"          { return symbol("unset", Token.UNSET); }
 <YYINITIAL> "if"             { return symbol("if", Token.IF); }
 <YYINITIAL> "else"           { return symbol("else", Token.ELSE); }
