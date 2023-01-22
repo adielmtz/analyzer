@@ -95,6 +95,9 @@ import java.util.Stack;
             case '(':
                 sym = symbol("(", Token.LPAREN);
                 break;
+            case '[':
+                sym = symbol("[", Token.LBRACKET);
+                break;
             case '{':
                 sym = symbol("{", Token.LBRACE);
                 break;
@@ -109,6 +112,7 @@ import java.util.Stack;
         if (braces.size() > 0) {
             char peek = braces.pop();
             return peek == '(' && bracket == ')'
+                || peek == '[' && bracket == ']'
                 || peek == '{' && bracket == '}';
         }
 
@@ -129,6 +133,9 @@ import java.util.Stack;
         switch (c) {
             case ')':
                 sym = symbol(")", Token.RPAREN);
+                break;
+            case ']':
+                sym = symbol("]", Token.RBRACKET);
                 break;
             case '}':
                 sym = symbol("}", Token.RBRACE);
@@ -190,8 +197,8 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> \"               { string.setLength(0); yybegin(ST_IN_STRING); }
 
 /* Symbols */
-<YYINITIAL> ("("|"{")        { return beginBracket(yytext()); }
-<YYINITIAL> (")"|"}")        { return endBracket(yytext()); }
+<YYINITIAL> ("("|"["|"{")    { return beginBracket(yytext()); }
+<YYINITIAL> (")"|"]"|"}")    { return endBracket(yytext()); }
 <YYINITIAL> ","              { return symbol(Token.COMMA); }
 <YYINITIAL> ";"              { return symbol(Token.SEMICOLON); }
 

@@ -29,6 +29,7 @@ terminal Ast IF, ELSE;
 /* Symbols */
 terminal LPAREN, RPAREN;
 terminal COMMA, SEMICOLON;
+terminal LBRACKET, RBRACKET;
 terminal LBRACE, RBRACE;
 
 /* Expressions */
