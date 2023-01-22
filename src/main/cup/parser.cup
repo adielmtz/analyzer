@@ -28,7 +28,7 @@ terminal Ast IF, ELSE;
 
 /* Symbols */
 terminal LPAREN, RPAREN;
-terminal SEMICOLON;
+terminal COMMA, SEMICOLON;
 terminal LBRACE, RBRACE;
 
 /* Expressions */
@@ -59,6 +59,9 @@ statement ::=
                                     {: RESULT = Ast.create(AstKind.AST_FOR, a, b, c, s); :}
   | WHILE expr:e statement:s        {: RESULT = Ast.create(AstKind.AST_WHILE, e, s); :}
   | expr:e SEMICOLON                {: RESULT = e; :}
+  | PRINT expr:e SEMICOLON          {: RESULT = Ast.create(AstKind.AST_PRINT, e); :}
+  | PRINTLN expr:e SEMICOLON        {: RESULT = Ast.create(AstKind.AST_PRINTLN, e); :}
+  | UNSET expr:e SEMICOLON          {: RESULT = Ast.create(AstKind.AST_UNSET, e); :}
 ;
 
 if_statement ::=
@@ -67,10 +70,7 @@ if_statement ::=
 ;
 
 expr ::=
-    PRINT expr:e                    {: RESULT = Ast.create(AstKind.AST_PRINT, e); :}
-  | PRINTLN expr:e                  {: RESULT = Ast.create(AstKind.AST_PRINTLN, e); :}
-  | UNSET expr:e                    {: RESULT = Ast.create(AstKind.AST_UNSET, e); :}
-  | expr:a DECLARATION expr:b       {: RESULT = Ast.create(AstKind.AST_DECLARATION, a, b); :}
+    expr:a DECLARATION expr:b       {: RESULT = Ast.create(AstKind.AST_DECLARATION, a, b); :}
   | expr:a ASSIGN expr:b            {: RESULT = Ast.create(AstKind.AST_ASSIGN, a, b); :}
   | expr:a AND expr:b               {: RESULT = Ast.create(AstKind.AST_AND, a, b); :}
   | expr:a OR expr:b                {: RESULT = Ast.create(AstKind.AST_OR, a, b); :}
