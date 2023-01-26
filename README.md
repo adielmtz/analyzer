@@ -3,6 +3,13 @@
 Parser & interpreter for a custom language.
 This project was made for study and research about compiler construction.
 
+## Why "Analyzer"?
+
+1. I'm bad at naming things.
+2. This project began as a simple lexical analysis program. The parser and interpreter were added later.
+
+_I might rename it in the future_
+
 ## Types
 
 The language supports these 4 primitive types:
