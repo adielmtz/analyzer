@@ -11,20 +11,21 @@ terminal Scalar IDENTIFIER;
 terminal Scalar STRING;
 
 /* Logic operators */
-terminal Ast DECLARATION, ASSIGN;
-terminal Ast EQUALS, NOT_EQUALS;
-terminal Ast SMALLER, SMALLER_OR_EQUAL;
-terminal Ast GREATER, GREATER_OR_EQUAL;
-terminal Ast AND, OR;
+terminal DECLARATION, ASSIGN;
+terminal EQUALS, NOT_EQUALS;
+terminal SMALLER, SMALLER_OR_EQUAL;
+terminal GREATER, GREATER_OR_EQUAL;
+terminal AND, OR;
 
 /* Arithmetic operators */
-terminal Ast ADD, MINUS, MULTIPLY, POW, DIVIDE, MODULUS;
-terminal AST INCREMENT, DECREMENT;
+terminal ADD, MINUS, MULTIPLY, POW, DIVIDE, MODULUS;
+terminal INCREMENT, DECREMENT;
 
 /* Keywords */
-terminal Ast PRINT, PRINTLN, UNSET;
-terminal Ast FOR, WHILE;
-terminal Ast IF, ELSE;
+terminal PRINT, PRINTLN, UNSET;
+terminal FOR, WHILE;
+terminal IF, ELSE;
+terminal NOELSE;
 
 /* Symbols */
 terminal LPAREN, RPAREN;
@@ -38,9 +39,9 @@ non terminal Ast top_statement, statement;
 non terminal Ast if_statement, if_stmt_without_else;
 
 /* Expressions */
-non terminal List<Ast> print_expr_list;
-non terminal Ast expr, print_expr, scalar;
-non terminal Ast variable;
+non terminal List<Ast> print_expr_list, array_expr_value_list;
+non terminal Ast expr, array_expr, print_expr, optional_expr, scalar;
+non terminal Ast array_access, variable;
 
 precedence right DECLARATION, ASSIGN;
 precedence left ADD, MINUS;
@@ -52,6 +53,7 @@ precedence nonassoc SMALLER, SMALLER_OR_EQUAL;
 precedence nonassoc GREATER, GREATER_OR_EQUAL;
 precedence nonassoc INCREMENT, DECREMENT;
 precedence nonassoc ELSE;
+precedence nonassoc LBRACKET, RBRACKET;
 
 start with top_statement_list;
 
@@ -86,7 +88,7 @@ if_stmt_without_else ::=
 ;
 
 if_statement ::=
-    if_stmt_without_else:iswe               {: RESULT = iswe; :}
+    if_stmt_without_else:iswe               {: RESULT = iswe; :} %prec NOELSE
   | if_stmt_without_else:iswe ELSE statement:s
                                             {: RESULT = Ast.create(AstKind.AST_IF_ELSE, iswe, s); :}
 ;
@@ -126,8 +128,14 @@ expr ::=
   | scalar:s                                {: RESULT = s; :}
 ;
 
+optional_expr ::=
+    expr:e                                  {: RESULT = e; :}
+  | /* %empty */
+;
+
 variable ::=
     IDENTIFIER:id                           {: RESULT = Ast.createWithValue(AstKind.AST_IDENTIFIER, id); :}
+  | array_access:aa                         {: RESULT = aa; :}
 ;
 
 scalar ::=
@@ -135,4 +143,21 @@ scalar ::=
   | FLOAT:f                                 {: RESULT = Ast.createWithValue(AstKind.AST_FLOAT, f); :}
   | INTEGER:i                               {: RESULT = Ast.createWithValue(AstKind.AST_INTEGER, i); :}
   | STRING:s                                {: RESULT = Ast.createWithValue(AstKind.AST_STRING, s); :}
+  | array_expr:ae                           {: RESULT = ae; :}
+;
+
+array_access ::=
+    variable:v LBRACKET optional_expr:oe RBRACKET
+                                            {: RESULT = Ast.create(AstKind.AST_ARRAY_ACCESS, v, oe); :}
+;
+
+array_expr ::=
+    LBRACKET array_expr_value_list:aevl RBRACKET
+                                            {: RESULT = Ast.createArray(aevl); :}
+;
+
+array_expr_value_list ::=
+    array_expr_value_list:aevl COMMA optional_expr:oe
+                                            {: aevl.add(oe); RESULT = aevl; :}
+  | optional_expr:oe                        {: RESULT = Ast.createList(oe); :}
 ;
