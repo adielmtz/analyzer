@@ -12,7 +12,7 @@ _I might rename it in the future_
 
 ## Types
 
-The language supports these 4 primitive types:
+The language supports these 5 primitive types:
 
 1. `array` (java.util.List).
 2. `bool` (java.lang.Boolean).
