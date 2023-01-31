@@ -1,15 +1,19 @@
-package org.automatas;
+package org.automatas.engine;
 
 public enum AstKind {
-    /* Parser Special Ast */
+    /* Lists */
     AST_STATEMENT_LIST,
 
     /* Literals */
-    AST_IDENTIFIER,
-    AST_STRING,
-    AST_INTEGER,
-    AST_FLOAT,
     AST_BOOL,
+    AST_FLOAT,
+    AST_INTEGER,
+    AST_STRING,
+    AST_IDENTIFIER,
+
+    /* Arrays */
+    AST_ARRAY,
+    AST_ARRAY_ACCESS,
 
     /* Logic operators */
     AST_DECLARATION,
@@ -38,6 +42,7 @@ public enum AstKind {
     AST_PRE_DEC,
 
     /* Keywords */
+    AST_LEN,
     AST_PRINT,
     AST_PRINTLN,
     AST_UNSET,

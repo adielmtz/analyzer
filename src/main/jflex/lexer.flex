@@ -1,9 +1,10 @@
-package org.automatas;
+package org.automatas.language;
 
 import java_cup.runtime.Symbol;
 import java_cup.runtime.ComplexSymbolFactory;
 import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import org.automatas.engine.Scalar;
 
 import java.io.Reader;
 import java.util.Stack;
@@ -59,7 +60,7 @@ import java.util.Stack;
     }
 
     private Symbol bool(boolean value) {
-        return symbol(String.valueOf(value), Token.BOOL, Scalar.fromBool(value));
+        return symbol(String.valueOf(value), Token.BOOL, Scalar.fromBoolean(value));
     }
 
     private Symbol integer(String text, int base) {
@@ -178,6 +179,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 
 <YYINITIAL> "true"           { return bool(true); }
 <YYINITIAL> "false"          { return bool(false); }
+<YYINITIAL> "len"            { return symbol("len", Token.LEN); }
 <YYINITIAL> "print"          { return symbol("print", Token.PRINT); }
 <YYINITIAL> "println"        { return symbol("println", Token.PRINTLN); }
 <YYINITIAL> "unset"          { return symbol("unset", Token.UNSET); }

@@ -1,7 +1,10 @@
-package org.automatas;
+package org.automatas.language;
 
 import java_cup.runtime.Symbol;
 import java.util.List;
+import org.automatas.engine.Ast;
+import org.automatas.engine.AstKind;
+import org.automatas.engine.Scalar;
 
 /* Literals */
 terminal Scalar BOOL;
@@ -22,7 +25,7 @@ terminal ADD, MINUS, MULTIPLY, POW, DIVIDE, MODULUS;
 terminal INCREMENT, DECREMENT;
 
 /* Keywords */
-terminal PRINT, PRINTLN, UNSET;
+terminal PRINT, PRINTLN, UNSET, LEN;
 terminal FOR, WHILE;
 terminal IF, ELSE;
 terminal NOELSE;
@@ -59,7 +62,7 @@ start with top_statement_list;
 
 top_statement_list ::=
     top_statement_list:tsl top_statement:ts {: tsl.add(ts); RESULT = tsl; :}
-  | /* %empty */                            {: RESULT = Ast.createList(); :}
+  | /* %empty */                            {: RESULT = Ast.makeList(); :}
 ;
 
 top_statement ::=
@@ -68,62 +71,63 @@ top_statement ::=
 
 nested_statement_list ::=
     nested_statement_list:nsl statement:s   {: nsl.add(s); RESULT = nsl; :}
-  | /* %empty */                            {: RESULT = Ast.createList(); :}
+  | /* %empty */                            {: RESULT = Ast.makeList(); :}
 ;
 
 statement ::=
-    LBRACE nested_statement_list:nsl RBRACE {: RESULT = Ast.createFromList(AstKind.AST_STATEMENT_LIST, nsl); :}
+    LBRACE nested_statement_list:nsl RBRACE {: RESULT = Ast.makeFromList(AstKind.AST_STATEMENT_LIST, nsl); :}
   | if_statement:i                          {: RESULT = i; :}
-  | WHILE expr:e statement:s                {: RESULT = Ast.create(AstKind.AST_WHILE, e, s); :}
+  | WHILE expr:e statement:s                {: RESULT = Ast.make(AstKind.AST_WHILE, e, s); :}
   | FOR expr:a SEMICOLON expr:b SEMICOLON expr:c statement:s
-                                            {: RESULT = Ast.create(AstKind.AST_FOR, a, b, c, s); :}
-  | PRINT print_expr_list:pel SEMICOLON     {: RESULT = Ast.createFromList(AstKind.AST_STATEMENT_LIST, pel); :}
-  | PRINTLN expr:e SEMICOLON                {: RESULT = Ast.create(AstKind.AST_PRINTLN, e); :}
+                                            {: RESULT = Ast.make(AstKind.AST_FOR, a, b, c, s); :}
+  | PRINT print_expr_list:pel SEMICOLON     {: RESULT = Ast.makeFromList(AstKind.AST_STATEMENT_LIST, pel); :}
+  | PRINTLN expr:e SEMICOLON                {: RESULT = Ast.make(AstKind.AST_PRINTLN, e); :}
   | expr:e SEMICOLON                        {: RESULT = e; :}
-  | UNSET variable:v SEMICOLON              {: RESULT = Ast.create(AstKind.AST_UNSET, v); :}
+  | UNSET variable:v SEMICOLON              {: RESULT = Ast.make(AstKind.AST_UNSET, v); :}
 ;
 
 if_stmt_without_else ::=
-    IF expr:e statement:s                   {: RESULT = Ast.create(AstKind.AST_IF, e, s); :}
+    IF expr:e statement:s                   {: RESULT = Ast.make(AstKind.AST_IF, e, s); :}
 ;
 
 if_statement ::=
     if_stmt_without_else:iswe               {: RESULT = iswe; :} %prec NOELSE
   | if_stmt_without_else:iswe ELSE statement:s
-                                            {: RESULT = Ast.create(AstKind.AST_IF_ELSE, iswe, s); :}
+                                            {: RESULT = Ast.make(AstKind.AST_IF_ELSE, iswe, s); :}
 ;
 
 print_expr_list ::=
     print_expr_list:pel COMMA print_expr:pe {: pel.add(pe); RESULT = pel; :}
-  | print_expr:pe                           {: RESULT = Ast.createList(pe); :}
+  | print_expr:pe                           {: RESULT = Ast.makeList(pe); :}
 ;
 
 print_expr ::=
-    expr:e                                  {: RESULT = Ast.create(AstKind.AST_PRINT, e); :}
+    expr:e                                  {: RESULT = Ast.make(AstKind.AST_PRINT, e); :}
 ;
 
 expr ::=
     variable:v                              {: RESULT = v; :}
-  | variable:v DECLARATION expr:e           {: RESULT = Ast.create(AstKind.AST_DECLARATION, v, e); :}
-  | variable:v ASSIGN expr:e                {: RESULT = Ast.create(AstKind.AST_ASSIGN, v, e); :}
-  | variable:v INCREMENT                    {: RESULT = Ast.create(AstKind.AST_POST_INC, v); :}
-  | INCREMENT variable:v                    {: RESULT = Ast.create(AstKind.AST_PRE_INC, v); :}
-  | variable:v DECREMENT                    {: RESULT = Ast.create(AstKind.AST_POST_DEC, v); :}
-  | DECREMENT variable:v                    {: RESULT = Ast.create(AstKind.AST_PRE_DEC, v); :}
-  | expr:a AND expr:b                       {: RESULT = Ast.create(AstKind.AST_AND, a, b); :}
-  | expr:a OR expr:b                        {: RESULT = Ast.create(AstKind.AST_OR, a, b); :}
-  | expr:a ADD expr:b                       {: RESULT = Ast.create(AstKind.AST_ADD, a, b); :}
-  | expr:a MINUS expr:b                     {: RESULT = Ast.create(AstKind.AST_MINUS, a, b); :}
-  | expr:a MULTIPLY expr:b                  {: RESULT = Ast.create(AstKind.AST_MULTIPLY, a, b); :}
-  | expr:a POW expr:b                       {: RESULT = Ast.create(AstKind.AST_POW, a, b); :}
-  | expr:a DIVIDE expr:b                    {: RESULT = Ast.create(AstKind.AST_DIVIDE, a, b); :}
-  | expr:a MODULUS expr:b                   {: RESULT = Ast.create(AstKind.AST_MODULUS, a, b); :}
-  | expr:a EQUALS expr:b                    {: RESULT = Ast.create(AstKind.AST_EQUALS, a, b); :}
-  | expr:a NOT_EQUALS expr:b                {: RESULT = Ast.create(AstKind.AST_NOT_EQUALS, a, b); :}
-  | expr:a SMALLER expr:b                   {: RESULT = Ast.create(AstKind.AST_SMALLER, a, b); :}
-  | expr:a SMALLER_OR_EQUAL expr:b          {: RESULT = Ast.create(AstKind.AST_SMALLER_OR_EQUAL, a, b); :}
-  | expr:a GREATER expr:b                   {: RESULT = Ast.create(AstKind.AST_GREATER, a, b); :}
-  | expr:a GREATER_OR_EQUAL expr:b          {: RESULT = Ast.create(AstKind.AST_GREATER_OR_EQUAL, a, b); :}
+  | variable:v DECLARATION expr:e           {: RESULT = Ast.make(AstKind.AST_DECLARATION, v, e); :}
+  | variable:v ASSIGN expr:e                {: RESULT = Ast.make(AstKind.AST_ASSIGN, v, e); :}
+  | variable:v INCREMENT                    {: RESULT = Ast.make(AstKind.AST_POST_INC, v); :}
+  | INCREMENT variable:v                    {: RESULT = Ast.make(AstKind.AST_PRE_INC, v); :}
+  | variable:v DECREMENT                    {: RESULT = Ast.make(AstKind.AST_POST_DEC, v); :}
+  | DECREMENT variable:v                    {: RESULT = Ast.make(AstKind.AST_PRE_DEC, v); :}
+  | expr:a AND expr:b                       {: RESULT = Ast.make(AstKind.AST_AND, a, b); :}
+  | expr:a OR expr:b                        {: RESULT = Ast.make(AstKind.AST_OR, a, b); :}
+  | expr:a ADD expr:b                       {: RESULT = Ast.make(AstKind.AST_ADD, a, b); :}
+  | expr:a MINUS expr:b                     {: RESULT = Ast.make(AstKind.AST_MINUS, a, b); :}
+  | expr:a MULTIPLY expr:b                  {: RESULT = Ast.make(AstKind.AST_MULTIPLY, a, b); :}
+  | expr:a POW expr:b                       {: RESULT = Ast.make(AstKind.AST_POW, a, b); :}
+  | expr:a DIVIDE expr:b                    {: RESULT = Ast.make(AstKind.AST_DIVIDE, a, b); :}
+  | expr:a MODULUS expr:b                   {: RESULT = Ast.make(AstKind.AST_MODULUS, a, b); :}
+  | expr:a EQUALS expr:b                    {: RESULT = Ast.make(AstKind.AST_EQUALS, a, b); :}
+  | expr:a NOT_EQUALS expr:b                {: RESULT = Ast.make(AstKind.AST_NOT_EQUALS, a, b); :}
+  | expr:a SMALLER expr:b                   {: RESULT = Ast.make(AstKind.AST_SMALLER, a, b); :}
+  | expr:a SMALLER_OR_EQUAL expr:b          {: RESULT = Ast.make(AstKind.AST_SMALLER_OR_EQUAL, a, b); :}
+  | expr:a GREATER expr:b                   {: RESULT = Ast.make(AstKind.AST_GREATER, a, b); :}
+  | expr:a GREATER_OR_EQUAL expr:b          {: RESULT = Ast.make(AstKind.AST_GREATER_OR_EQUAL, a, b); :}
+  | LEN LPAREN expr:e RPAREN                {: RESULT = Ast.make(AstKind.AST_LEN, e); :}
   | LPAREN expr:e RPAREN                    {: RESULT = e; :}
   | scalar:s                                {: RESULT = s; :}
 ;
@@ -134,30 +138,30 @@ optional_expr ::=
 ;
 
 variable ::=
-    IDENTIFIER:id                           {: RESULT = Ast.createWithValue(AstKind.AST_IDENTIFIER, id); :}
+    IDENTIFIER:id                           {: RESULT = Ast.scalar(AstKind.AST_IDENTIFIER, id); :}
   | array_access:aa                         {: RESULT = aa; :}
 ;
 
 scalar ::=
-    BOOL:b                                  {: RESULT = Ast.createWithValue(AstKind.AST_BOOL, b); :}
-  | FLOAT:f                                 {: RESULT = Ast.createWithValue(AstKind.AST_FLOAT, f); :}
-  | INTEGER:i                               {: RESULT = Ast.createWithValue(AstKind.AST_INTEGER, i); :}
-  | STRING:s                                {: RESULT = Ast.createWithValue(AstKind.AST_STRING, s); :}
+    BOOL:b                                  {: RESULT = Ast.scalar(AstKind.AST_BOOL, b); :}
+  | FLOAT:f                                 {: RESULT = Ast.scalar(AstKind.AST_FLOAT, f); :}
+  | INTEGER:i                               {: RESULT = Ast.scalar(AstKind.AST_INTEGER, i); :}
+  | STRING:s                                {: RESULT = Ast.scalar(AstKind.AST_STRING, s); :}
   | array_expr:ae                           {: RESULT = ae; :}
 ;
 
 array_access ::=
     variable:v LBRACKET optional_expr:oe RBRACKET
-                                            {: RESULT = Ast.create(AstKind.AST_ARRAY_ACCESS, v, oe); :}
+                                            {: RESULT = Ast.make(AstKind.AST_ARRAY_ACCESS, v, oe); :}
 ;
 
 array_expr ::=
     LBRACKET array_expr_value_list:aevl RBRACKET
-                                            {: RESULT = Ast.createArray(aevl); :}
+                                            {: RESULT = Ast.makeArray(aevl); :}
 ;
 
 array_expr_value_list ::=
     array_expr_value_list:aevl COMMA optional_expr:oe
                                             {: aevl.add(oe); RESULT = aevl; :}
-  | optional_expr:oe                        {: RESULT = Ast.createList(oe); :}
+  | optional_expr:oe                        {: RESULT = Ast.makeList(oe); :}
 ;
