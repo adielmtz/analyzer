@@ -14,15 +14,21 @@ myvar = 2;   // Assignment.  Throws error if 'myvar' is undefined.
 unset myvar; // Var destroy. Returns true if 'myvar' was defined.
 
 // Types:
-string := "Waaah!"; // java.lang.String
-int    := 40;       // java.lang.Long
-float  := 3.141592; // java.lang.Double
-bool   := true;     // java.lang.Boolean
+string := "Waaah!";  // java.lang.String
+int    := 40;        // java.lang.Long
+float  := 3.141592;  // java.lang.Double
+bool   := true;      // java.lang.Boolean
+array  := [1, 2, 3]; // java.util.List<Scalar>
 
 // Print statement
 print "no automatic newline\n";
 println string;
 println "string literal";
+println array[0];
+
+// Functions
+a := len("string");  // String length
+b := len([1, 2, 3]); // Array count
 
 // Arithmetic operations:
 addition       := 5 + 2;

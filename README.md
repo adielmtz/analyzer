@@ -14,12 +14,13 @@ _I might rename it in the future_
 
 The language supports these 4 primitive types:
 
-1. `bool` (java.lang.Boolean).
-2. `float` (java.lang.Double).
-3. `integer` (java.lang.Long).
-4. `string` (java.lang.String).
+1. `array` (java.util.List).
+2. `bool` (java.lang.Boolean).
+3. `float` (java.lang.Double).
+4. `integer` (java.lang.Long).
+5. `string` (java.lang.String).
 
-(Arrays not supported _yet_)
+~~(Arrays not supported _yet_)~~ Arrays are supported!
 
 Numeric literals can be expressed in different ways:
 
@@ -49,6 +50,7 @@ my_bool   := true;
 my_float  := 3.1415;
 my_int    := 1;
 my_string := "Waah";
+my_array  := [1, 2, 3];
 ```
 
 The engine will throw a fatal error if the variable already exists:
@@ -71,6 +73,21 @@ The engine will throw a fatal error if the variable is undefined:
 
 ```
 unknown = "?"; // Fatal Error: undefined variable 'unknown'.
+```
+
+For arrays, you can access their values using the usual array syntax:
+
+```
+value := array[0];
+array[0] = "hello";
+```
+
+You can also add new values to the end of the array using the `[]` syntax (borrowed from PHP):
+
+```
+array := []; // empty array
+array[] = "a"; // add value
+println array[0];
 ```
 
 ## Logic operators
@@ -156,5 +173,14 @@ var := "It's alive!"; // Declare a variable
 
 print var; // Ok.
 unset var;
-print var; // Fatal Error: undefined variable 'var'. 
+print var; // Fatal Error: undefined variable 'var'.
+```
+
+For an array, it removes the value at the given index:
+```
+array := [1, 2, 3];
+
+print array[0]; // 1
+unset array[0];
+print array[0]; // 2
 ```
