@@ -116,8 +116,9 @@ public final class Scalar implements Comparable<Scalar> {
 
     public double asFloat() {
         return switch (type) {
-            case ARRAY, BOOLEAN -> asBoolean() ? 1 : 0;
-            case FLOAT, INTEGER -> (double) value;
+            case ARRAY, BOOLEAN -> asBoolean() ? 1d : 0d;
+            case FLOAT -> (double) value;
+            case INTEGER -> (double) ((long) value);
             case STRING -> tryParseDouble(asString());
         };
     }
@@ -125,7 +126,8 @@ public final class Scalar implements Comparable<Scalar> {
     public long asInteger() {
         return switch (type) {
             case ARRAY, BOOLEAN -> asBoolean() ? 1 : 0;
-            case FLOAT, INTEGER -> (long) value;
+            case FLOAT -> (long) ((double) value);
+            case INTEGER -> (long) value;
             case STRING -> tryParseLong(asString());
         };
     }
