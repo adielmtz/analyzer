@@ -84,7 +84,7 @@ public final class Executor {
                 executeScalarComparison(ast, result);
                 break;
             case AST_ADD:
-            case AST_MINUS:
+            case AST_SUBTRACT:
             case AST_MULTIPLY:
             case AST_POW:
             case AST_DIVIDE:
@@ -428,7 +428,7 @@ public final class Executor {
 
         Scalar value = switch (ast.kind) {
             case AST_ADD -> ScalarOperation.add(a, b);
-            case AST_MINUS -> ScalarOperation.subtract(a, b);
+            case AST_SUBTRACT -> ScalarOperation.subtract(a, b);
             case AST_MULTIPLY -> ScalarOperation.multiply(a, b);
             case AST_POW -> ScalarOperation.pow(a, b);
             case AST_DIVIDE -> ScalarOperation.divide(a, b);

@@ -29,7 +29,7 @@ public enum AstKind {
 
     /* Arithmetic operators */
     AST_ADD,
-    AST_MINUS,
+    AST_SUBTRACT,
     AST_MULTIPLY,
     AST_POW,
     AST_DIVIDE,
