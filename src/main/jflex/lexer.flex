@@ -217,7 +217,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> ">="             { return symbol(">=", Token.GREATER_OR_EQUAL); }
 
 /* Arithmetic Operators */
-<YYINITIAL> "+"              { return symbol("+", Token.ADD); }
+<YYINITIAL> "+"              { return symbol("+", Token.PLUS); }
 <YYINITIAL> "++"             { return symbol("++", Token.INCREMENT); }
 <YYINITIAL> "-"              { return symbol("-", Token.MINUS); }
 <YYINITIAL> "--"             { return symbol("--", Token.DECREMENT); }

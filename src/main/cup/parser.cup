@@ -21,7 +21,7 @@ terminal GREATER, GREATER_OR_EQUAL;
 terminal AND, OR;
 
 /* Arithmetic operators */
-terminal ADD, MINUS, MULTIPLY, POW, DIVIDE, MODULUS;
+terminal PLUS, MINUS, MULTIPLY, POW, DIVIDE, MODULUS;
 terminal INCREMENT, DECREMENT;
 
 /* Keywords */
@@ -47,7 +47,7 @@ non terminal Ast expr, array_expr, print_expr, optional_expr, scalar;
 non terminal Ast array_access, variable;
 
 precedence right DECLARATION, ASSIGN;
-precedence left ADD, MINUS;
+precedence left PLUS, MINUS;
 precedence left MULTIPLY, POW, DIVIDE, MODULUS;
 precedence left AND, OR;
 
@@ -115,7 +115,7 @@ expr ::=
   | DECREMENT variable:v                    {: RESULT = Ast.make(AstKind.AST_PRE_DEC, v); :}
   | expr:a AND expr:b                       {: RESULT = Ast.make(AstKind.AST_AND, a, b); :}
   | expr:a OR expr:b                        {: RESULT = Ast.make(AstKind.AST_OR, a, b); :}
-  | expr:a ADD expr:b                       {: RESULT = Ast.make(AstKind.AST_ADD, a, b); :}
+  | expr:a PLUS expr:b                       {: RESULT = Ast.make(AstKind.AST_ADD, a, b); :}
   | expr:a MINUS expr:b                     {: RESULT = Ast.make(AstKind.AST_MINUS, a, b); :}
   | expr:a MULTIPLY expr:b                  {: RESULT = Ast.make(AstKind.AST_MULTIPLY, a, b); :}
   | expr:a POW expr:b                       {: RESULT = Ast.make(AstKind.AST_POW, a, b); :}
