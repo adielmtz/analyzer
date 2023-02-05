@@ -26,6 +26,7 @@ terminal INCREMENT, DECREMENT;
 
 /* Keywords */
 terminal PRINT, PRINTLN, UNSET, LEN;
+terminal READLN;
 terminal FOR, WHILE;
 terminal IF, ELSE;
 terminal NOELSE;
@@ -128,6 +129,7 @@ expr ::=
   | expr:a GREATER expr:b                   {: RESULT = Ast.make(AstKind.AST_GREATER, a, b); :}
   | expr:a GREATER_OR_EQUAL expr:b          {: RESULT = Ast.make(AstKind.AST_GREATER_OR_EQUAL, a, b); :}
   | LEN LPAREN expr:e RPAREN                {: RESULT = Ast.make(AstKind.AST_LEN, e); :}
+  | READLN LPAREN optional_expr:oe RPAREN   {: RESULT = Ast.make(AstKind.AST_READLN, oe); :}
   | LPAREN expr:e RPAREN                    {: RESULT = e; :}
   | scalar:s                                {: RESULT = s; :}
 ;

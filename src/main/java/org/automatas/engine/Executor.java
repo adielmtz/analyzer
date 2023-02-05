@@ -9,6 +9,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 
 public final class Executor {
     private final HashMap<String, Scalar> variables;
@@ -103,6 +104,9 @@ public final class Executor {
             case AST_PRINT:
             case AST_PRINTLN:
                 executePrint(ast, result);
+                break;
+            case AST_READLN:
+                executeReadLine(ast, result);
                 break;
             case AST_UNSET:
                 executeUnset(ast, result);
@@ -529,6 +533,31 @@ public final class Executor {
 
         result.setType(NodeType.NONE);
         result.setValue(null);
+    }
+
+    private void executeReadLine(Ast ast, Node result) {
+        assert ast.child.length == 1;
+
+        Ast prompt = ast.child[0];
+
+        if (prompt != null) {
+            var node = new Node();
+            execute(prompt, node);
+
+            if (node.getType() != NodeType.CONSTANT) {
+                fatalError("Expression '%s' cannot be printed.", prompt.kind);
+            }
+
+            System.out.print(node.getValue().asString());
+        }
+
+        var scanner = new Scanner(System.in);
+        String input = scanner.nextLine();
+        scanner.close();
+
+        Scalar value = Scalar.fromString(input);
+        result.setType(NodeType.CONSTANT);
+        result.setValue(value);
     }
 
     private void executeUnset(Ast ast, Node result) {

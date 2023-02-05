@@ -182,6 +182,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "len"            { return symbol("len", Token.LEN); }
 <YYINITIAL> "print"          { return symbol("print", Token.PRINT); }
 <YYINITIAL> "println"        { return symbol("println", Token.PRINTLN); }
+<YYINITIAL> "readline"       { return symbol("readline", Token.READLN); }
 <YYINITIAL> "unset"          { return symbol("unset", Token.UNSET); }
 <YYINITIAL> "if"             { return symbol("if", Token.IF); }
 <YYINITIAL> "else"           { return symbol("else", Token.ELSE); }
