@@ -60,7 +60,7 @@ import java.util.Stack;
     }
 
     private Symbol bool(boolean value) {
-        return symbol(String.valueOf(value), Token.BOOL, Scalar.fromBoolean(value));
+        return symbol(value ? "true" : "false", Token.BOOL, Scalar.fromBoolean(value));
     }
 
     private Symbol integer(String text, int base) {
@@ -180,6 +180,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "true"           { return bool(true); }
 <YYINITIAL> "false"          { return bool(false); }
 <YYINITIAL> "len"            { return symbol("len", Token.LEN); }
+<YYINITIAL> "typeof"         { return symbol("typeof", Token.TYPEOF); }
 <YYINITIAL> "print"          { return symbol("print", Token.PRINT); }
 <YYINITIAL> "println"        { return symbol("println", Token.PRINTLN); }
 <YYINITIAL> "readline"       { return symbol("readline", Token.READLN); }

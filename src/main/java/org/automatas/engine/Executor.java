@@ -101,6 +101,9 @@ public final class Executor {
             case AST_LEN:
                 executeLen(ast, result);
                 break;
+            case AST_TYPEOF:
+                executeTypeof(ast, result);
+                break;
             case AST_PRINT:
             case AST_PRINTLN:
                 executePrint(ast, result);
@@ -159,6 +162,23 @@ public final class Executor {
         Scalar array = Scalar.fromArray(values);
         result.setType(NodeType.CONSTANT);
         result.setValue(array);
+    }
+
+    private void executeTypeof(Ast ast, Node result) {
+        assert ast.child.length == 1;
+
+        Ast expr = ast.child[0];
+
+        var node = new Node();
+        execute(expr, node);
+
+        if (node.getType() != NodeType.CONSTANT) {
+            fatalError("Cannot get type of non-scalar expression.");
+        }
+
+        Scalar typeName = Scalar.fromString(node.getValue().getType().toString());
+        result.setType(NodeType.CONSTANT);
+        result.setValue(typeName);
     }
 
     private void executeVarDeclaration(Ast ast, Node result) {
