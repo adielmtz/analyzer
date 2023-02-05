@@ -51,5 +51,6 @@ public enum AstKind {
     AST_IF,
     AST_IF_ELSE,
     AST_FOR,
+    AST_DO_WHILE,
     AST_WHILE,
 }

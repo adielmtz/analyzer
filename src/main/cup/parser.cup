@@ -27,7 +27,7 @@ terminal INCREMENT, DECREMENT;
 /* Keywords */
 terminal PRINT, PRINTLN, UNSET, LEN;
 terminal TYPEOF, READLN;
-terminal FOR, WHILE;
+terminal FOR, DO, WHILE;
 terminal IF, ELSE;
 terminal NOELSE;
 
@@ -78,6 +78,7 @@ nested_statement_list ::=
 statement ::=
     LBRACE nested_statement_list:nsl RBRACE {: RESULT = Ast.makeFromList(AstKind.AST_STATEMENT_LIST, nsl); :}
   | if_statement:i                          {: RESULT = i; :}
+  | DO statement:s WHILE expr:e SEMICOLON   {: RESULT = Ast.make(AstKind.AST_DO_WHILE, s, e); :}
   | WHILE expr:e statement:s                {: RESULT = Ast.make(AstKind.AST_WHILE, e, s); :}
   | FOR expr:a SEMICOLON expr:b SEMICOLON expr:c statement:s
                                             {: RESULT = Ast.make(AstKind.AST_FOR, a, b, c, s); :}

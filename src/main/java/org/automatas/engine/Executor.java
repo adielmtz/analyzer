@@ -125,6 +125,9 @@ public final class Executor {
             case AST_FOR:
                 executeForStatement(ast, result);
                 break;
+            case AST_DO_WHILE:
+                executeDoWhileStatement(ast, result);
+                break;
             case AST_WHILE:
                 executeWhileStatement(ast, result);
                 break;
@@ -670,6 +673,24 @@ public final class Executor {
             execute(step, stepOp);
             execute(cond, condOp);
         }
+
+        result.setType(NodeType.NONE);
+        result.setValue(null);
+    }
+
+    private void executeDoWhileStatement(Ast ast, Node result) {
+        assert ast.child.length == 2;
+
+        Ast stmt = ast.child[0];
+        Ast expr = ast.child[1];
+
+        var stmtOp = new Node();
+        var exprOp = new Node();
+
+        do {
+            execute(stmt, stmtOp);
+            execute(expr, exprOp);
+        } while (exprOp.getValue().asBoolean());
 
         result.setType(NodeType.NONE);
         result.setValue(null);

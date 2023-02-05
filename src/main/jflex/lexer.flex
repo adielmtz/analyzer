@@ -188,6 +188,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "if"             { return symbol("if", Token.IF); }
 <YYINITIAL> "else"           { return symbol("else", Token.ELSE); }
 <YYINITIAL> "for"            { return symbol("for", Token.FOR); }
+<YYINITIAL> "do"             { return symbol("do", Token.DO); }
 <YYINITIAL> "while"          { return symbol("while", Token.WHILE); }
 <YYINITIAL> {Identifier}     { return text(Token.IDENTIFIER, yytext()); }
 
