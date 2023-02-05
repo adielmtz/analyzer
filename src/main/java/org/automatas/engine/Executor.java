@@ -5,11 +5,13 @@ import java_cup.runtime.Symbol;
 import org.automatas.language.Lexer;
 import org.automatas.language.Parser;
 
+import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Scanner;
 
 public final class Executor {
     private final HashMap<String, Scalar> variables;
@@ -558,26 +560,30 @@ public final class Executor {
     private void executeReadLine(Ast ast, Node result) {
         assert ast.child.length == 1;
 
-        Ast prompt = ast.child[0];
+        Ast expr = ast.child[0];
 
-        if (prompt != null) {
+        if (expr != null) {
             var node = new Node();
-            execute(prompt, node);
+            execute(expr, node);
 
             if (node.getType() != NodeType.CONSTANT) {
-                fatalError("Expression '%s' cannot be printed.", prompt.kind);
+                fatalError("Expression '%s' cannot be printed.", expr.kind);
             }
 
-            System.out.print(node.getValue().asString());
+            String prompt = node.getValue().asString();
+            System.out.print(prompt);
         }
 
-        var scanner = new Scanner(System.in);
-        String input = scanner.nextLine();
-        scanner.close();
+        try {
+            var reader = new BufferedReader(new InputStreamReader(System.in));
+            String input = reader.readLine();
 
-        Scalar value = Scalar.fromString(input);
-        result.setType(NodeType.CONSTANT);
-        result.setValue(value);
+            Scalar value = Scalar.fromString(input);
+            result.setType(NodeType.CONSTANT);
+            result.setValue(value);
+        } catch (IOException e) {
+            fatalError("stdin failure.");
+        }
     }
 
     private void executeUnset(Ast ast, Node result) {
