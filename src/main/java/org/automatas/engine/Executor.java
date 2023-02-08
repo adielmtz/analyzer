@@ -208,9 +208,10 @@ public final class Executor {
             fatalError("Expression of type '%s' cannot be assigned to variable '%s'.", expr.kind, name);
         }
 
-        variables.put(name, exprNode.getValue());
-        result.setType(NodeType.NONE);
-        result.setValue(null);
+        Scalar value = exprNode.getValue();
+        variables.put(name, value);
+        result.setType(NodeType.CONSTANT);
+        result.setValue(value);
     }
 
     private void executeVarAssign(Ast ast, Node result) {
@@ -237,7 +238,6 @@ public final class Executor {
         }
 
         Scalar value = exprNode.getValue();
-
         variables.put(name, value);
         result.setType(NodeType.CONSTANT);
         result.setValue(value);
