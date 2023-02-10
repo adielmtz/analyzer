@@ -8,14 +8,23 @@ public class Ast {
 
     public final AstKind kind;
     public final Scalar value;
+    public final Object extra;
     public final Ast[] child;
 
     public static Ast scalar(AstKind kind, Scalar scalar) {
-        return new Ast(kind, scalar, EMPTY_CHILD);
+        return new Ast(kind, scalar, null, EMPTY_CHILD);
     }
 
     public static Ast make(AstKind kind, Ast... child) {
-        return new Ast(kind, null, child);
+        return new Ast(kind, null, null, child);
+    }
+
+    public static Ast makeTypeCast(Ast expr, ScalarType type) {
+        return new Ast(AstKind.AST_AS, null, type, new Ast[] { expr });
+    }
+
+    public static Ast makeTypeCheck(Ast expr, ScalarType type) {
+        return new Ast(AstKind.AST_IS, null, type, new Ast[] { expr });
     }
 
     public static Ast makeArray(List<Ast> list) {
@@ -42,12 +51,13 @@ public class Ast {
     }
 
     public static Ast makeFromList(AstKind kind, List<Ast> list) {
-        return new Ast(kind, null, list.toArray(Ast[]::new));
+        return new Ast(kind, null, null, list.toArray(Ast[]::new));
     }
 
-    protected Ast(AstKind kind, Scalar value, Ast[] child) {
+    protected Ast(AstKind kind, Scalar value, Object extra, Ast[] child) {
         this.kind = kind;
         this.value = value;
+        this.extra = extra;
         this.child = child;
     }
 

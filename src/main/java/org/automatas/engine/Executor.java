@@ -106,6 +106,12 @@ public final class Executor {
             case AST_TYPEOF:
                 executeTypeof(ast, result);
                 break;
+            case AST_AS:
+                executeTypeCast(ast, result);
+                break;
+            case AST_IS:
+                executeTypeCheck(ast, result);
+                break;
             case AST_PRINT:
             case AST_PRINTLN:
                 executePrint(ast, result);
@@ -184,6 +190,54 @@ public final class Executor {
         Scalar typeName = Scalar.fromString(node.getValue().getType().toString());
         result.setType(NodeType.CONSTANT);
         result.setValue(typeName);
+    }
+
+    private void executeTypeCast(Ast ast, Node result) {
+        assert ast.child.length == 1;
+        assert ast.extra instanceof ScalarType;
+
+        Ast expr = ast.child[0];
+        ScalarType targetType = (ScalarType) ast.extra;
+
+        var node = new Node();
+        execute(expr, node);
+
+        if (node.getType() != NodeType.CONSTANT) {
+            fatalError("Cannot type cast non-scalar expression.");
+        }
+
+        Scalar original = node.getValue();
+        Scalar casted = switch (targetType) {
+            case ARRAY -> Scalar.fromArray(original.asArray());
+            case BOOLEAN -> Scalar.fromBoolean(original.asBoolean());
+            case FLOAT -> Scalar.fromFloat(original.asFloat());
+            case INTEGER -> Scalar.fromInteger(original.asInteger());
+            case STRING -> Scalar.fromString(original.asString());
+        };
+
+        result.setType(NodeType.CONSTANT);
+        result.setValue(casted);
+    }
+
+    private void executeTypeCheck(Ast ast, Node result) {
+        assert ast.child.length == 1;
+        assert ast.extra instanceof ScalarType;
+
+        Ast expr = ast.child[0];
+        ScalarType targetType = (ScalarType) ast.extra;
+
+        var node = new Node();
+        execute(expr, node);
+
+        if (node.getType() != NodeType.CONSTANT) {
+            fatalError("Cannot type cast non-scalar expression.");
+        }
+
+        Scalar value = node.getValue();
+        Scalar isSameType = Scalar.fromBoolean(value.getType() == targetType);
+
+        result.setType(NodeType.CONSTANT);
+        result.setValue(isSameType);
     }
 
     private void executeVarDeclaration(Ast ast, Node result) {

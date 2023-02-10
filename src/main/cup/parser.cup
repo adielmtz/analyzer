@@ -5,6 +5,7 @@ import java.util.List;
 import org.automatas.engine.Ast;
 import org.automatas.engine.AstKind;
 import org.automatas.engine.Scalar;
+import org.automatas.engine.ScalarType;
 
 /* Literals */
 terminal Scalar BOOL;
@@ -12,6 +13,13 @@ terminal Scalar FLOAT;
 terminal Scalar INTEGER;
 terminal Scalar IDENTIFIER;
 terminal Scalar STRING;
+
+/* Types */
+terminal ScalarType TYPENAME_ARRAY;
+terminal ScalarType TYPENAME_BOOL;
+terminal ScalarType TYPENAME_FLOAT;
+terminal ScalarType TYPENAME_INT;
+terminal ScalarType TYPENAME_STRING;
 
 /* Logic operators */
 terminal DECLARATION, ASSIGN;
@@ -26,7 +34,7 @@ terminal INCREMENT, DECREMENT;
 
 /* Keywords */
 terminal PRINT, PRINTLN, UNSET, LEN;
-terminal TYPEOF, READLN;
+terminal TYPEOF, AS, IS, READLN;
 terminal FOR, DO, WHILE;
 terminal IF, ELSE;
 terminal NOELSE;
@@ -46,8 +54,9 @@ non terminal Ast if_statement, if_stmt_without_else;
 non terminal List<Ast> print_expr_list, array_expr_value_list;
 non terminal Ast expr, array_expr, print_expr, optional_expr;
 non terminal Ast scalar, ident, array_access, variable;
+non terminal ScalarType type_name_expr;
 
-precedence right DECLARATION, ASSIGN;
+precedence right DECLARATION, ASSIGN, AS, IS;
 precedence left PLUS, MINUS;
 precedence left MULTIPLY, POW, DIVIDE, MODULUS;
 precedence left AND, OR;
@@ -129,6 +138,8 @@ expr ::=
   | expr:a SMALLER_OR_EQUAL expr:b          {: RESULT = Ast.make(AstKind.AST_SMALLER_OR_EQUAL, a, b); :}
   | expr:a GREATER expr:b                   {: RESULT = Ast.make(AstKind.AST_GREATER, a, b); :}
   | expr:a GREATER_OR_EQUAL expr:b          {: RESULT = Ast.make(AstKind.AST_GREATER_OR_EQUAL, a, b); :}
+  | expr:e AS type_name_expr:tne            {: RESULT = Ast.makeTypeCast(e, tne); :}
+  | expr:e IS type_name_expr:tne            {: RESULT = Ast.makeTypeCheck(e, tne); :}
   | LEN LPAREN expr:e RPAREN                {: RESULT = Ast.make(AstKind.AST_LEN, e); :}
   | TYPEOF LPAREN expr:e RPAREN             {: RESULT = Ast.make(AstKind.AST_TYPEOF, e); :}
   | READLN LPAREN optional_expr:oe RPAREN   {: RESULT = Ast.make(AstKind.AST_READLN, oe); :}
@@ -156,6 +167,14 @@ scalar ::=
   | INTEGER:i                               {: RESULT = Ast.scalar(AstKind.AST_INTEGER, i); :}
   | STRING:s                                {: RESULT = Ast.scalar(AstKind.AST_STRING, s); :}
   | array_expr:ae                           {: RESULT = ae; :}
+;
+
+type_name_expr ::=
+    TYPENAME_ARRAY                              {: RESULT = ScalarType.ARRAY; :}
+  | TYPENAME_BOOL                               {: RESULT = ScalarType.BOOLEAN; :}
+  | TYPENAME_FLOAT                              {: RESULT = ScalarType.FLOAT; :}
+  | TYPENAME_INT                                {: RESULT = ScalarType.INTEGER; :}
+  | TYPENAME_STRING                             {: RESULT = ScalarType.STRING; :}
 ;
 
 array_access ::=
