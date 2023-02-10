@@ -44,8 +44,8 @@ non terminal Ast if_statement, if_stmt_without_else;
 
 /* Expressions */
 non terminal List<Ast> print_expr_list, array_expr_value_list;
-non terminal Ast expr, array_expr, print_expr, optional_expr, scalar;
-non terminal Ast array_access, variable;
+non terminal Ast expr, array_expr, print_expr, optional_expr;
+non terminal Ast scalar, ident, array_access, variable;
 
 precedence right DECLARATION, ASSIGN;
 precedence left PLUS, MINUS;
@@ -141,8 +141,12 @@ optional_expr ::=
   | /* %empty */
 ;
 
-variable ::=
+ident ::=
     IDENTIFIER:id                           {: RESULT = Ast.scalar(AstKind.AST_IDENTIFIER, id); :}
+;
+
+variable ::=
+    ident:i                                 {: RESULT = i; :}
   | array_access:aa                         {: RESULT = aa; :}
 ;
 
