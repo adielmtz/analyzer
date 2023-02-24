@@ -46,9 +46,8 @@ terminal LBRACKET, RBRACKET;
 terminal LBRACE, RBRACE;
 
 /* Statements */
-non terminal List<Ast> top_statement_list, nested_statement_list;
-non terminal Ast top_statement, statement;
-non terminal Ast if_statement, if_stmt_without_else;
+non terminal List<Ast> statement_list;
+non terminal Ast statement, if_statement, if_stmt_without_else;
 
 /* Expressions */
 non terminal List<Ast> print_expr_list, array_expr_value_list;
@@ -68,24 +67,15 @@ precedence left PLUS, MINUS;
 precedence left MULTIPLY, POW, DIVIDE, MODULUS;
 precedence left AND, OR;
 
-start with top_statement_list;
+start with statement_list;
 
-top_statement_list ::=
-    top_statement_list:tsl top_statement:ts {: tsl.add(ts); RESULT = tsl; :}
-  | /* %empty */                            {: RESULT = Ast.makeList(); :}
-;
-
-top_statement ::=
-    statement:s                             {: RESULT = s; :}
-;
-
-nested_statement_list ::=
-    nested_statement_list:nsl statement:s   {: nsl.add(s); RESULT = nsl; :}
+statement_list ::=
+    statement_list:sl statement:s           {: sl.add(s); RESULT = sl; :}
   | /* %empty */                            {: RESULT = Ast.makeList(); :}
 ;
 
 statement ::=
-    LBRACE nested_statement_list:nsl RBRACE {: RESULT = Ast.makeFromList(AstKind.AST_STATEMENT_LIST, nsl); :}
+    LBRACE statement_list:sl RBRACE         {: RESULT = Ast.makeFromList(AstKind.AST_STATEMENT_LIST, sl); :}
   | if_statement:i                          {: RESULT = i; :}
   | DO statement:s WHILE expr:e SEMICOLON   {: RESULT = Ast.make(AstKind.AST_DO_WHILE, s, e); :}
   | WHILE expr:e statement:s                {: RESULT = Ast.make(AstKind.AST_WHILE, e, s); :}
