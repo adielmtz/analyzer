@@ -14,11 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public final class Executor {
-    private final HashMap<String, Scalar> variables;
-
-    public Executor() {
-        variables = HashMap.newHashMap(64);
-    }
+    private final ScopeController scope = new ScopeController();
 
     public void executeFile(String filename) {
         try (var reader = new FileReader(filename)) {
@@ -40,10 +36,14 @@ public final class Executor {
     }
 
     private void executeTopStatements(List<Ast> statements) {
+        scope.beginBlock();
+
         for (Ast ast : statements) {
             var node = new Node();
             execute(ast, node);
         }
+
+        scope.endBlock();
     }
 
     private void execute(Ast ast, Node result) {
@@ -143,10 +143,14 @@ public final class Executor {
     private void executeStatementList(Ast ast, Node result) {
         assert ast.kind == AstKind.AST_STATEMENT_LIST;
 
+        scope.beginBlock();
+
         for (Ast statement : ast.child) {
             var node = new Node();
             execute(statement, node);
         }
+
+        scope.endBlock();
 
         result.setType(NodeType.NONE);
         result.setValue(null);
@@ -251,7 +255,7 @@ public final class Executor {
         }
 
         String name = var.value.asString();
-        if (variables.containsKey(name)) {
+        if (scope.hasLocalSymbol(name)) {
             fatalError("'%s' is already defined.", name);
         }
 
@@ -263,7 +267,7 @@ public final class Executor {
         }
 
         Scalar value = exprNode.getValue();
-        variables.put(name, value);
+        scope.addSymbol(name, value);
         result.setType(NodeType.CONSTANT);
         result.setValue(value);
     }
@@ -280,7 +284,7 @@ public final class Executor {
         }
 
         String name = var.value.asString();
-        if (!variables.containsKey(name)) {
+        if (!scope.hasSymbol(name)) {
             fatalError("undefined variable '%s'.", name);
         }
 
@@ -292,7 +296,7 @@ public final class Executor {
         }
 
         Scalar value = exprNode.getValue();
-        variables.put(name, value);
+        scope.setSymbol(name, value);
         result.setType(NodeType.CONSTANT);
         result.setValue(value);
     }
@@ -332,12 +336,12 @@ public final class Executor {
         assert ast.child.length == 0;
 
         String name = ast.value.asString();
-        if (!variables.containsKey(name)) {
+        if (!scope.hasSymbol(name)) {
             fatalError("undefined variable '%s'.", name);
         }
 
         result.setType(NodeType.CONSTANT);
-        result.setValue(variables.get(name));
+        result.setValue(scope.getSymbol(name));
     }
 
     private void executeArrayAccess(Ast ast, Node result) {
@@ -551,7 +555,7 @@ public final class Executor {
             array.asArray().set((int) index.asInteger(), modified);
         } else {
             String name = var.value.asString();
-            variables.put(name, modified);
+            scope.setSymbol(name, modified);
         }
 
         result.setType(NodeType.CONSTANT);
@@ -660,7 +664,7 @@ public final class Executor {
             array.asArray().remove((int) index.asInteger());
         } else {
             String name = var.value.asString();
-            variables.remove(name);
+            scope.removeSymbol(name);
         }
 
         result.setType(NodeType.NONE);
@@ -679,7 +683,10 @@ public final class Executor {
         boolean executed = false;
 
         if (condNode.getValue().asBoolean()) {
+            scope.beginBlock();
             execute(stmt, new Node());
+            scope.endBlock();
+
             executed = true;
         }
 
@@ -699,7 +706,9 @@ public final class Executor {
 
         if (!ifstmtNode.getValue().asBoolean()) {
             // if was not executed, thus execute else
+            scope.beginBlock();
             execute(elstmt, new Node());
+            scope.endBlock();
         }
 
         result.setType(NodeType.NONE);
@@ -723,7 +732,10 @@ public final class Executor {
         execute(cond, condOp);
 
         while (condOp.getValue().asBoolean()) {
+            scope.beginBlock();
             execute(stmt, stmtOp);
+            scope.endBlock();
+
             execute(step, stepOp);
             execute(cond, condOp);
         }
@@ -742,7 +754,10 @@ public final class Executor {
         var exprOp = new Node();
 
         do {
+            scope.beginBlock();
             execute(stmt, stmtOp);
+            scope.endBlock();
+
             execute(expr, exprOp);
         } while (exprOp.getValue().asBoolean());
 
@@ -761,7 +776,10 @@ public final class Executor {
         execute(expr, exprOp);
 
         while (exprOp.getValue().asBoolean()) {
+            scope.beginBlock();
             execute(stmt, stmtOp);
+            scope.endBlock();
+
             execute(expr, exprOp);
         }
 
