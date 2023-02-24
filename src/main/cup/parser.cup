@@ -56,17 +56,17 @@ non terminal Ast expr, array_expr, print_expr, optional_expr;
 non terminal Ast scalar, ident, array_access, variable;
 non terminal ScalarType type_name_expr;
 
-precedence right DECLARATION, ASSIGN, AS, IS;
-precedence left PLUS, MINUS;
-precedence left MULTIPLY, POW, DIVIDE, MODULUS;
-precedence left AND, OR;
-
 precedence nonassoc EQUALS, NOT_EQUALS;
 precedence nonassoc SMALLER, SMALLER_OR_EQUAL;
 precedence nonassoc GREATER, GREATER_OR_EQUAL;
 precedence nonassoc INCREMENT, DECREMENT;
 precedence nonassoc ELSE;
 precedence nonassoc LBRACKET, RBRACKET;
+
+precedence right DECLARATION, ASSIGN, AS, IS;
+precedence left PLUS, MINUS;
+precedence left MULTIPLY, POW, DIVIDE, MODULUS;
+precedence left AND, OR;
 
 start with top_statement_list;
 
