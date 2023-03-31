@@ -1,7 +1,5 @@
 package org.automatas.engine;
 
-import java.util.Optional;
-
 public final class Node {
     private NodeType type;
     private Scalar value;
