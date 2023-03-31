@@ -6,11 +6,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="Analizador" />
+        <module name="Analyzer" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="Analyzer" target="19" />
-    </bytecodeTargetLevel>
   </component>
 </project>
