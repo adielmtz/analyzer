@@ -44,7 +44,7 @@ public enum AstKind {
     /* Keywords */
     AST_LEN,
     AST_TYPEOF,
-    AST_AS,
+    AST_TYPE_CAST,
     AST_IS,
     AST_PRINT,
     AST_PRINTLN,

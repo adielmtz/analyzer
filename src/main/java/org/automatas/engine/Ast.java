@@ -19,8 +19,8 @@ public class Ast {
         return new Ast(kind, null, null, child);
     }
 
-    public static Ast makeTypeCast(Ast expr, ScalarType type) {
-        return new Ast(AstKind.AST_AS, null, type, new Ast[] { expr });
+    public static Ast makeTypeCast(ScalarType type, Ast expr) {
+        return new Ast(AstKind.AST_TYPE_CAST, null, type, new Ast[] { expr });
     }
 
     public static Ast makeTypeCheck(Ast expr, ScalarType type) {

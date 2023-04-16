@@ -105,7 +105,7 @@ public final class Executor {
             case AST_TYPEOF:
                 executeTypeof(ast, result);
                 break;
-            case AST_AS:
+            case AST_TYPE_CAST:
                 executeTypeCast(ast, result);
                 break;
             case AST_IS:

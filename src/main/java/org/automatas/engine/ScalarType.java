@@ -7,7 +7,7 @@ public enum ScalarType {
     INTEGER("int"),
     STRING("string");
 
-    private String displayName;
+    private final String displayName;
 
     ScalarType(String displayName) {
         this.displayName = displayName;
