@@ -26,6 +26,7 @@ public enum AstKind {
     AST_SMALLER_OR_EQUAL,
     AST_GREATER,
     AST_GREATER_OR_EQUAL,
+    AST_BOOL_NOT,
 
     /* Arithmetic operators */
     AST_ADD,

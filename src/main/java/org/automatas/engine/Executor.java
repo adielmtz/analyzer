@@ -85,6 +85,9 @@ public final class Executor {
             case AST_GREATER_OR_EQUAL:
                 executeScalarComparison(ast, result);
                 break;
+            case AST_BOOL_NOT:
+                executeBoolNot(ast, result);
+                break;
             case AST_ADD:
             case AST_SUBTRACT:
             case AST_MULTIPLY:
@@ -487,6 +490,25 @@ public final class Executor {
         Scalar value = Scalar.fromBoolean(order);
         result.setType(NodeType.CONSTANT);
         result.setValue(value);
+    }
+
+    private void executeBoolNot(Ast ast, Node result) {
+        assert ast.child.length == 1;
+
+        Ast expr = ast.child[0];
+
+        var node = new Node();
+        execute(expr, node);
+
+        if (node.getType() != NodeType.CONSTANT) {
+            fatalError("Cannot negate non-boolean expression.");
+        }
+
+        boolean original = node.getValue().asBoolean();
+        Scalar negated = Scalar.fromBoolean(!original);
+
+        result.setType(NodeType.CONSTANT);
+        result.setValue(negated);
     }
 
     private void executeScalarOperations(Ast ast, Node result) {

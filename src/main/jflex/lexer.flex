@@ -210,6 +210,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 /* Symbols */
 <YYINITIAL> ("("|"["|"{")    { return beginBracket(yytext()); }
 <YYINITIAL> (")"|"]"|"}")    { return endBracket(yytext()); }
+<YYINITIAL> "!"              { return symbol(Token.EXCLAMATION); }
 <YYINITIAL> ","              { return symbol(Token.COMMA); }
 <YYINITIAL> ";"              { return symbol(Token.SEMICOLON); }
 
