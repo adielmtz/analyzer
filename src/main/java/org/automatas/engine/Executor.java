@@ -133,6 +133,9 @@ public final class Executor {
             case AST_FOR:
                 executeForStatement(ast, result);
                 break;
+            case AST_FOREACH:
+                executeForeachStatement(ast, result);
+                break;
             case AST_DO_WHILE:
                 executeDoWhileStatement(ast, result);
                 break;
@@ -759,6 +762,45 @@ public final class Executor {
 
             execute(step, stepOp);
             execute(cond, condOp);
+        }
+
+        result.setType(NodeType.NONE);
+        result.setValue(null);
+    }
+
+    private void executeForeachStatement(Ast ast, Node result) {
+        assert ast.child.length == 3;
+
+        Ast var = ast.child[0];
+        Ast expr = ast.child[1];
+        Ast stmt = ast.child[2];
+
+        var exprNode = new Node();
+        execute(expr, exprNode);
+
+        if (exprNode.getType() != NodeType.CONSTANT) {
+            fatalError("Expression '%s' cannot be iterated.", expr.kind);
+        }
+
+        Scalar iterable = exprNode.getValue();
+        if (!iterable.isArray()) {
+            fatalError("Cannot iterate non-array value '%s'.", iterable.getType());
+        }
+
+        // Get var identifier
+        String name = var.value.asString();
+        List<Scalar> array = iterable.asArray();
+
+        // Create local var if needed
+        if (!scope.hasSymbol(name)) {
+            scope.addSymbol(name, null);
+        }
+
+        for (Scalar value : array) {
+            scope.beginBlock();
+            scope.setSymbol(name, value);
+            execute(stmt, new Node());
+            scope.endBlock();
         }
 
         result.setType(NodeType.NONE);

@@ -180,6 +180,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "true"           { return bool(true); }
 <YYINITIAL> "false"          { return bool(false); }
 <YYINITIAL> "is"             { return symbol("is", Token.IS); }
+<YYINITIAL> "in"             { return symbol("in", Token.IN); }
 <YYINITIAL> "array"          { return symbol("array", Token.TYPENAME_ARRAY); }
 <YYINITIAL> "bool"           { return symbol("bool", Token.TYPENAME_BOOL); }
 <YYINITIAL> "float"          { return symbol("float", Token.TYPENAME_FLOAT); }
@@ -194,6 +195,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "if"             { return symbol("if", Token.IF); }
 <YYINITIAL> "else"           { return symbol("else", Token.ELSE); }
 <YYINITIAL> "for"            { return symbol("for", Token.FOR); }
+<YYINITIAL> "foreach"        { return symbol("foreach", Token.FOREACH); }
 <YYINITIAL> "do"             { return symbol("do", Token.DO); }
 <YYINITIAL> "while"          { return symbol("while", Token.WHILE); }
 <YYINITIAL> {Identifier}     { return text(Token.IDENTIFIER, yytext()); }
