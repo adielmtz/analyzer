@@ -58,6 +58,7 @@ non terminal Ast expr, array_expr, print_expr, optional_expr;
 non terminal Ast scalar, ident, array_access, variable;
 non terminal ScalarType type_name_expr;
 
+precedence right DECLARATION, ASSIGN;
 precedence left MULTIPLY, POW, DIVIDE, MODULUS;
 precedence left PLUS, MINUS;
 precedence left AND, OR, IS;
@@ -68,8 +69,6 @@ precedence nonassoc SMALLER, SMALLER_OR_EQUAL;
 precedence nonassoc GREATER, GREATER_OR_EQUAL;
 precedence nonassoc INCREMENT, DECREMENT;
 precedence nonassoc ELSE, LBRACKET, RBRACKET;
-
-precedence right DECLARATION, ASSIGN;
 
 start with top_statement;
 
