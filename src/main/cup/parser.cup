@@ -49,6 +49,7 @@ terminal COMMA, SEMICOLON;
 
 /* Statements */
 non terminal List<Ast> statement_list;
+non terminal Ast top_statement;
 non terminal Ast statement, if_statement, if_stmt_without_else;
 
 /* Expressions */
@@ -70,7 +71,11 @@ precedence nonassoc ELSE, LBRACKET, RBRACKET;
 
 precedence right DECLARATION, ASSIGN;
 
-start with statement_list;
+start with top_statement;
+
+top_statement ::=
+    statement_list:sl                       {: RESULT = Ast.makeFromList(AstKind.AST_STATEMENT_LIST, sl); :}
+;
 
 statement_list ::=
     statement_list:sl statement:s           {: sl.add(s); RESULT = sl; :}

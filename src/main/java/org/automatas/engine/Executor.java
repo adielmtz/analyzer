@@ -22,8 +22,12 @@ public final class Executor {
             var parser = new Parser(lexer, factory);
 
             Symbol result = parser.parse();
-            List<Ast> statements = (List<Ast>) result.value;
-            executeTopStatements(statements);
+            Ast root = (Ast) result.value;
+
+            scope.beginBlock();
+            var node = new Node();
+            execute(root, node);
+            scope.endBlock();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -32,17 +36,6 @@ public final class Executor {
     private void fatalError(String fmt, Object... args) {
         String message = "Fatal Error: " + fmt.formatted(args);
         throw new RuntimeException(message);
-    }
-
-    private void executeTopStatements(List<Ast> statements) {
-        scope.beginBlock();
-
-        for (Ast ast : statements) {
-            var node = new Node();
-            execute(ast, node);
-        }
-
-        scope.endBlock();
     }
 
     private void execute(Ast ast, Node result) {
