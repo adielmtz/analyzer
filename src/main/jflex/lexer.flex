@@ -179,13 +179,14 @@ CommentContent       = ([^*]|\*+[^/*])*
 
 <YYINITIAL> "true"           { return bool(true); }
 <YYINITIAL> "false"          { return bool(false); }
+<YYINITIAL> "as"             { return symbol("as", Token.AS); }
 <YYINITIAL> "is"             { return symbol("is", Token.IS); }
 <YYINITIAL> "in"             { return symbol("in", Token.IN); }
 <YYINITIAL> "array"          { return symbol("array", Token.TYPENAME_ARRAY); }
 <YYINITIAL> "bool"           { return symbol("bool", Token.TYPENAME_BOOL); }
 <YYINITIAL> "float"          { return symbol("float", Token.TYPENAME_FLOAT); }
 <YYINITIAL> "int"            { return symbol("int", Token.TYPENAME_INT); }
-<YYINITIAL> "str" | "string" { return symbol("string", Token.TYPENAME_STRING); }
+<YYINITIAL> "string" { return symbol("string", Token.TYPENAME_STRING); }
 <YYINITIAL> "len"            { return symbol("len", Token.LEN); }
 <YYINITIAL> "typeof"         { return symbol("typeof", Token.TYPEOF); }
 <YYINITIAL> "print"          { return symbol("print", Token.PRINT); }
