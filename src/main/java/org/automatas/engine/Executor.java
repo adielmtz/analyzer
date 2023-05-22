@@ -111,8 +111,8 @@ public final class Executor {
             case AST_PRINTLN:
                 executePrint(ast, result);
                 break;
-            case AST_READLN:
-                executeReadLine(ast, result);
+            case AST_INPUT:
+                executeInput(ast, result);
                 break;
             case AST_UNSET:
                 executeUnset(ast, result);
@@ -635,7 +635,7 @@ public final class Executor {
         result.setValue(null);
     }
 
-    private void executeReadLine(Ast ast, Node result) {
+    private void executeInput(Ast ast, Node result) {
         assert ast.child.length == 1;
 
         Ast expr = ast.child[0];
