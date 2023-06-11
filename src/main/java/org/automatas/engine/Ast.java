@@ -27,33 +27,6 @@ public class Ast {
         return new Ast(AstKind.AST_IS, null, type, new Ast[] { expr });
     }
 
-    public static Ast makeArray(List<Ast> list) {
-        int index = list.size() - 1;
-        if (index >= 0 && list.get(index) == null) {
-            // Remove trailing NULL value
-            list.remove(index);
-        }
-
-        return makeFromList(AstKind.AST_ARRAY, list);
-    }
-
-    public static List<Ast> makeList(Ast... child) {
-        List<Ast> list = new ArrayList<>(child.length);
-        for (Ast ast : child) {
-            if (ast == null) {
-                break;
-            }
-
-            list.add(ast);
-        }
-
-        return list;
-    }
-
-    public static Ast makeFromList(AstKind kind, List<Ast> list) {
-        return new Ast(kind, null, null, list.toArray(Ast[]::new));
-    }
-
     protected Ast(AstKind kind, Scalar value, Object extra, Ast[] child) {
         this.kind = kind;
         this.value = value;

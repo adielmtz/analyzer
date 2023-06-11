@@ -1,9 +1,9 @@
 package org.automatas.language;
 
 import java_cup.runtime.Symbol;
-import java.util.List;
 import org.automatas.engine.Ast;
 import org.automatas.engine.AstKind;
+import org.automatas.engine.AstList;
 import org.automatas.engine.Scalar;
 import org.automatas.engine.ScalarType;
 
@@ -48,12 +48,12 @@ terminal EXCLAMATION;
 terminal COMMA, SEMICOLON;
 
 /* Statements */
-non terminal List<Ast> statement_list;
+non terminal AstList statement_list;
 non terminal Ast top_statement;
 non terminal Ast statement, if_statement, if_stmt_without_else;
 
 /* Expressions */
-non terminal List<Ast> print_expr_list, array_expr_value_list;
+non terminal AstList print_expr_list, array_expr_value_list;
 non terminal Ast expr, array_expr, print_expr, optional_expr;
 non terminal Ast scalar, ident, array_access, variable;
 non terminal ScalarType type_name;
@@ -73,23 +73,23 @@ precedence left AND, OR, AS, IS;
 start with top_statement;
 
 top_statement ::=
-    statement_list:sl                       {: RESULT = Ast.makeFromList(AstKind.AST_STATEMENT_LIST, sl); :}
+    statement_list:sl                       {: RESULT = sl.makeList(); :}
 ;
 
 statement_list ::=
-    statement_list:sl statement:s           {: sl.add(s); RESULT = sl; :}
-  | /* %empty */                            {: RESULT = Ast.makeList(); :}
+    statement_list:sl statement:s           {: RESULT = sl.add(s); :}
+  | /* %empty */                            {: RESULT = AstList.beginList(); :}
 ;
 
 statement ::=
-    LBRACE statement_list:sl RBRACE         {: RESULT = Ast.makeFromList(AstKind.AST_STATEMENT_LIST, sl); :}
+    LBRACE statement_list:sl RBRACE         {: RESULT = sl.makeList(); :}
   | if_statement:i                          {: RESULT = i; :}
   | DO statement:s WHILE expr:e SEMICOLON   {: RESULT = Ast.make(AstKind.AST_DO_WHILE, s, e); :}
   | WHILE expr:e statement:s                {: RESULT = Ast.make(AstKind.AST_WHILE, e, s); :}
   | FOR expr:a SEMICOLON expr:b SEMICOLON expr:c statement:s
                                             {: RESULT = Ast.make(AstKind.AST_FOR, a, b, c, s); :}
   | FOREACH ident:i IN expr:e statement:s   {: RESULT = Ast.make(AstKind.AST_FOREACH, i, e, s); :}
-  | PRINT print_expr_list:pel SEMICOLON     {: RESULT = Ast.makeFromList(AstKind.AST_STATEMENT_LIST, pel); :}
+  | PRINT print_expr_list:pel SEMICOLON     {: RESULT = pel.makeList(); :}
   | PRINTLN expr:e SEMICOLON                {: RESULT = Ast.make(AstKind.AST_PRINTLN, e); :}
   | expr:e SEMICOLON                        {: RESULT = e; :}
   | UNSET variable:v SEMICOLON              {: RESULT = Ast.make(AstKind.AST_UNSET, v); :}
@@ -106,8 +106,8 @@ if_statement ::=
 ;
 
 print_expr_list ::=
-    print_expr_list:pel COMMA print_expr:pe {: pel.add(pe); RESULT = pel; :}
-  | print_expr:pe                           {: RESULT = Ast.makeList(pe); :}
+    print_expr_list:pel COMMA print_expr:pe {: RESULT = pel.add(pe); :}
+  | print_expr:pe                           {: RESULT = AstList.beginList(pe); :}
 ;
 
 print_expr ::=
@@ -183,11 +183,11 @@ array_access ::=
 
 array_expr ::=
     LBRACKET array_expr_value_list:aevl RBRACKET
-                                            {: RESULT = Ast.makeArray(aevl); :}
+                                            {: RESULT = aevl.makeArray(); :}
 ;
 
 array_expr_value_list ::=
     array_expr_value_list:aevl COMMA optional_expr:oe
-                                            {: aevl.add(oe); RESULT = aevl; :}
-  | optional_expr:oe                        {: RESULT = Ast.makeList(oe); :}
+                                            {: RESULT = aevl.add(oe); :}
+  | optional_expr:oe                        {: RESULT = AstList.beginList(oe); :}
 ;
