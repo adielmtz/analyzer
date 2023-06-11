@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class Executor {
-    private final ScopeController scope = new ScopeController();
+    private final ScopeManager scope = new ScopeManager();
 
     public void executeFile(String filename) {
         try (var reader = new FileReader(filename)) {
@@ -43,10 +43,7 @@ public final class Executor {
             case AST_STATEMENT_LIST:
                 executeStatementList(ast, result);
                 break;
-            case AST_BOOL:
-            case AST_FLOAT:
-            case AST_INTEGER:
-            case AST_STRING:
+            case AST_SCALAR:
                 executeScalar(ast, result);
                 break;
             case AST_ARRAY:
@@ -154,12 +151,15 @@ public final class Executor {
         result.setValue(null);
     }
 
+    @SuppressWarnings("unchecked")
     private void executeScalar(Ast ast, Node result) {
         assert ast.value != null;
         assert ast.child.length == 0;
 
+        Scalar value = Scalar.make(ast.value, ast.type);
+
         result.setType(NodeType.CONSTANT);
-        result.setValue(ast.value);
+        result.setValue(value);
     }
 
     private void executeArray(Ast ast, Node result) {
@@ -172,7 +172,7 @@ public final class Executor {
             values.add(node.getValue());
         }
 
-        Scalar array = Scalar.fromArray(values);
+        Scalar array = Scalar.makeArray(values);
         result.setType(NodeType.CONSTANT);
         result.setValue(array);
     }
@@ -189,17 +189,16 @@ public final class Executor {
             fatalError("Cannot get type of non-scalar expression.");
         }
 
-        Scalar typeName = Scalar.fromString(node.getValue().getType().toString());
+        Scalar typeName = Scalar.makeString(node.getValue().getType().toString());
         result.setType(NodeType.CONSTANT);
         result.setValue(typeName);
     }
 
     private void executeTypeCast(Ast ast, Node result) {
-        assert ast.child.length == 1;
-        assert ast.extra instanceof ScalarType;
+        assert ast.child.length == 2;
 
         Ast expr = ast.child[0];
-        ScalarType targetType = (ScalarType) ast.extra;
+        Ast type = ast.child[1];
 
         var node = new Node();
         execute(expr, node);
@@ -208,13 +207,21 @@ public final class Executor {
             fatalError("Cannot type cast non-scalar expression.");
         }
 
+        String typeName = type.value.toString();
+        ScalarType target = ScalarType.getType(typeName);
+
+        if (target == null) {
+            fatalError("Cannot cast to unknown type '%s'.", type.value);
+            return;
+        }
+
         Scalar original = node.getValue();
-        Scalar casted = switch (targetType) {
-            case ARRAY -> Scalar.fromArray(original.asArray());
-            case BOOLEAN -> Scalar.fromBoolean(original.asBoolean());
-            case FLOAT -> Scalar.fromFloat(original.asFloat());
-            case INTEGER -> Scalar.fromInteger(original.asInteger());
-            case STRING -> Scalar.fromString(original.asString());
+        Scalar casted = switch (target) {
+            case ARRAY -> Scalar.makeArray(original.toList());
+            case BOOL -> Scalar.makeBool(original.toBoolean());
+            case FLOAT -> Scalar.makeFloat(original.toDouble());
+            case INT -> Scalar.makeInt(original.toLong());
+            case STRING -> Scalar.makeString(original.toString());
         };
 
         result.setType(NodeType.CONSTANT);
@@ -222,11 +229,10 @@ public final class Executor {
     }
 
     private void executeTypeCheck(Ast ast, Node result) {
-        assert ast.child.length == 1;
-        assert ast.extra instanceof ScalarType;
+        assert ast.child.length == 2;
 
         Ast expr = ast.child[0];
-        ScalarType targetType = (ScalarType) ast.extra;
+        Ast type = ast.child[1];
 
         var node = new Node();
         execute(expr, node);
@@ -235,8 +241,16 @@ public final class Executor {
             fatalError("Cannot type cast non-scalar expression.");
         }
 
+        String typeName = type.value.toString();
+        ScalarType target = ScalarType.getType(typeName);
+
+        if (target == null) {
+            fatalError("Unknown type '%s'.", type.value);
+            return;
+        }
+
         Scalar value = node.getValue();
-        Scalar isSameType = Scalar.fromBoolean(value.getType() == targetType);
+        Scalar isSameType = Scalar.makeBool(value.getType() == target);
 
         result.setType(NodeType.CONSTANT);
         result.setValue(isSameType);
@@ -252,7 +266,7 @@ public final class Executor {
             fatalError("Illegal array access on left side of var declaration.");
         }
 
-        String name = var.value.asString();
+        String name = var.value.toString();
         if (scope.hasLocalSymbol(name)) {
             fatalError("'%s' is already defined.", name);
         }
@@ -281,7 +295,7 @@ public final class Executor {
             return;
         }
 
-        String name = var.value.asString();
+        String name = var.value.toString();
         if (!scope.hasSymbol(name)) {
             fatalError("undefined variable '%s'.", name);
         }
@@ -309,7 +323,7 @@ public final class Executor {
         var arrayNode = new Node();
         execute(var, arrayNode);
 
-        if (!arrayNode.hasArrayRef()) {
+        if (!arrayNode.hasArrayReference()) {
             fatalError("Cannot assign to non-array value using array access syntax.");
         }
 
@@ -320,12 +334,10 @@ public final class Executor {
             fatalError("Expression of type '%s' cannot be assigned as value.", expr.kind);
         }
 
-        ArrayReference reference = arrayNode.getArrayRef();
-        Scalar array = reference.getArray();
-        Scalar index = reference.getIndex();
+        ArrayReference reference = arrayNode.getArrayReference();
         Scalar value = exprNode.getValue();
+        reference.setArrayValue(value);
 
-        array.asArray().set((int) index.asInteger(), value);
         result.setType(NodeType.CONSTANT);
         result.setValue(value);
     }
@@ -333,7 +345,7 @@ public final class Executor {
     private void executeVarFetch(Ast ast, Node result) {
         assert ast.child.length == 0;
 
-        String name = ast.value.asString();
+        String name = ast.value.toString();
         if (!scope.hasSymbol(name)) {
             fatalError("undefined variable '%s'.", name);
         }
@@ -354,14 +366,14 @@ public final class Executor {
 
         if (idx == null) {
             // Add new "empty" space and return (expecting "arr[] = expr")
-            List<Scalar> list = array.asArray();
+            List<Scalar> list = array.toList();
             list.add(null);
 
-            Scalar newIndex = Scalar.fromInteger(list.size() - 1);
+            Scalar newIndex = Scalar.makeInt(list.size() - 1);
 
             result.setType(NodeType.NONE);
             result.setValue(null);
-            result.setArrayRef(array, newIndex);
+            result.setArrayReference(array, newIndex);
             return;
         }
 
@@ -374,10 +386,12 @@ public final class Executor {
             fatalError("Cannot use array access on non array value %s.", array.getType());
         }
 
-        Scalar value = array.asArray().get((int) index.asInteger());
+        var reference = new ArrayReference(array, index);
+        Scalar value = reference.getArrayValue();
+
         result.setType(NodeType.CONSTANT);
         result.setValue(value);
-        result.setArrayRef(array, index);
+        result.setArrayReference(reference);
     }
 
     private void executeLogicAnd(Ast ast, Node result) {
@@ -393,11 +407,11 @@ public final class Executor {
             fatalError("Invalid expression in left-hand side operand.");
         }
 
-        if (!lhsNode.getValue().asBoolean()) {
+        if (!lhsNode.getValue().toBoolean()) {
             // false && ??
             // expression is evaluated to false
             result.setType(NodeType.CONSTANT);
-            result.setValue(Scalar.fromBoolean(false));
+            result.setValue(Scalar.makeBool(false));
             return;
         }
 
@@ -408,7 +422,7 @@ public final class Executor {
             fatalError("Invalid expression in right-hand side operand.");
         }
 
-        Scalar value = Scalar.fromBoolean(rhsNode.getValue().asBoolean());
+        Scalar value = Scalar.makeBool(rhsNode.getValue().toBoolean());
 
         // true && ??
         result.setType(NodeType.CONSTANT);
@@ -428,11 +442,11 @@ public final class Executor {
             fatalError("Invalid expression in left-hand side operand.");
         }
 
-        if (lhsNode.getValue().asBoolean()) {
+        if (lhsNode.getValue().toBoolean()) {
             // true || ??
             // expression is evaluated to true
             result.setType(NodeType.CONSTANT);
-            result.setValue(Scalar.fromBoolean(true));
+            result.setValue(Scalar.makeBool(true));
             return;
         }
 
@@ -443,7 +457,7 @@ public final class Executor {
             fatalError("Invalid expression in right-hand side operand.");
         }
 
-        Scalar value = Scalar.fromBoolean(rhsNode.getValue().asBoolean());
+        Scalar value = Scalar.makeBool(rhsNode.getValue().toBoolean());
 
         // false || ??
         result.setType(NodeType.CONSTANT);
@@ -483,7 +497,7 @@ public final class Executor {
             default -> throw new IllegalStateException("Unexpected value: " + ast.kind);
         };
 
-        Scalar value = Scalar.fromBoolean(order);
+        Scalar value = Scalar.makeBool(order);
         result.setType(NodeType.CONSTANT);
         result.setValue(value);
     }
@@ -500,8 +514,8 @@ public final class Executor {
             fatalError("Cannot negate non-boolean expression.");
         }
 
-        boolean original = node.getValue().asBoolean();
-        Scalar negated = Scalar.fromBoolean(!original);
+        boolean original = node.getValue().toBoolean();
+        Scalar negated = Scalar.makeBool(!original);
 
         result.setType(NodeType.CONSTANT);
         result.setValue(negated);
@@ -559,19 +573,19 @@ public final class Executor {
         }
 
         Scalar modified = switch (ast.kind) {
-            case AST_POST_DEC, AST_PRE_DEC -> ScalarOperation.subtract(original, Scalar.fromInteger(1));
-            case AST_POST_INC, AST_PRE_INC -> ScalarOperation.add(original, Scalar.fromInteger(1));
+            case AST_POST_DEC, AST_PRE_DEC -> ScalarOperation.subtract(original, Scalar.makeInt(1));
+            case AST_POST_INC, AST_PRE_INC -> ScalarOperation.add(original, Scalar.makeInt(1));
             default -> throw new IllegalStateException("Unexpected value: " + ast.kind);
         };
 
         // Update value
         if (var.kind == AstKind.AST_ARRAY_ACCESS) {
-            ArrayReference reference = varNode.getArrayRef();
+            ArrayReference reference = varNode.getArrayReference();
             Scalar array = reference.getArray();
             Scalar index = reference.getIndex();
-            array.asArray().set((int) index.asInteger(), modified);
+            array.toList().set((int) index.toLong(), modified);
         } else {
-            String name = var.value.asString();
+            String name = var.value.toString();
             scope.setSymbol(name, modified);
         }
 
@@ -600,9 +614,9 @@ public final class Executor {
         Scalar length;
 
         if (value.isArray()) {
-            length = Scalar.fromInteger(value.asArray().size());
+            length = Scalar.makeInt(value.toList().size());
         } else if (value.isString()) {
-            length = Scalar.fromInteger(value.asString().length());
+            length = Scalar.makeInt(value.toString().length());
         } else {
             fatalError("Type '%s' cannot be used as len() argument.", value.getType());
             return;
@@ -624,7 +638,7 @@ public final class Executor {
             fatalError("Expression '%s' cannot be printed.", expr.kind);
         }
 
-        String value = exprNode.getValue().asString();
+        String value = exprNode.getValue().toString();
         System.out.print(value);
 
         if (ast.kind == AstKind.AST_PRINTLN) {
@@ -648,7 +662,7 @@ public final class Executor {
                 fatalError("Expression '%s' cannot be printed.", expr.kind);
             }
 
-            String prompt = node.getValue().asString();
+            String prompt = node.getValue().toString();
             System.out.print(prompt);
         }
 
@@ -656,7 +670,7 @@ public final class Executor {
             var reader = new BufferedReader(new InputStreamReader(System.in));
             String input = reader.readLine();
 
-            Scalar value = Scalar.fromString(input);
+            Scalar value = Scalar.makeString(input);
             result.setType(NodeType.CONSTANT);
             result.setValue(value);
         } catch (IOException e) {
@@ -673,14 +687,14 @@ public final class Executor {
             var varNode = new Node();
             execute(var, varNode);
 
-            ArrayReference reference = varNode.getArrayRef();
+            ArrayReference reference = varNode.getArrayReference();
             Scalar array = reference.getArray();
             Scalar index = reference.getIndex();
 
             // Remove from the list
-            array.asArray().remove((int) index.asInteger());
+            array.toList().remove((int) index.toLong());
         } else {
-            String name = var.value.asString();
+            String name = var.value.toString();
             scope.removeSymbol(name);
         }
 
@@ -699,7 +713,7 @@ public final class Executor {
 
         boolean executed = false;
 
-        if (condNode.getValue().asBoolean()) {
+        if (condNode.getValue().toBoolean()) {
             scope.beginBlock();
             execute(stmt, new Node());
             scope.endBlock();
@@ -708,7 +722,7 @@ public final class Executor {
         }
 
         result.setType(NodeType.TMP_VALUE);
-        result.setValue(Scalar.fromBoolean(executed));
+        result.setValue(Scalar.makeBool(executed));
     }
 
     private void executeIfElseStatement(Ast ast, Node result) {
@@ -721,7 +735,7 @@ public final class Executor {
         var ifstmtNode = new Node();
         execute(ifstmt, ifstmtNode);
 
-        if (!ifstmtNode.getValue().asBoolean()) {
+        if (!ifstmtNode.getValue().toBoolean()) {
             // if was not executed, thus execute else
             scope.beginBlock();
             execute(elstmt, new Node());
@@ -748,7 +762,7 @@ public final class Executor {
         execute(decl, declOp);
         execute(cond, condOp);
 
-        while (condOp.getValue().asBoolean()) {
+        while (condOp.getValue().toBoolean()) {
             scope.beginBlock();
             execute(stmt, stmtOp);
             scope.endBlock();
@@ -781,8 +795,8 @@ public final class Executor {
         }
 
         // Get var identifier
-        String name = var.value.asString();
-        List<Scalar> array = iterable.asArray();
+        String name = var.value.toString();
+        List<Scalar> array = iterable.toList();
 
         // Create local var if needed
         if (!scope.hasSymbol(name)) {
@@ -815,7 +829,7 @@ public final class Executor {
             scope.endBlock();
 
             execute(expr, exprOp);
-        } while (exprOp.getValue().asBoolean());
+        } while (exprOp.getValue().toBoolean());
 
         result.setType(NodeType.NONE);
         result.setValue(null);
@@ -831,7 +845,7 @@ public final class Executor {
         var stmtOp = new Node();
         execute(expr, exprOp);
 
-        while (exprOp.getValue().asBoolean()) {
+        while (exprOp.getValue().toBoolean()) {
             scope.beginBlock();
             execute(stmt, stmtOp);
             scope.endBlock();

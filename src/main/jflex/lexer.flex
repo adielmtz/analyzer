@@ -4,11 +4,9 @@ import java_cup.runtime.Symbol;
 import java_cup.runtime.ComplexSymbolFactory;
 import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
 import java_cup.runtime.ComplexSymbolFactory.Location;
-import org.automatas.engine.Scalar;
 
 import java.io.Reader;
 import java.util.Stack;
-
 %%
 
 %public
@@ -23,129 +21,95 @@ import java.util.Stack;
 %{
     private ComplexSymbolFactory factory;
     private StringBuilder string;
-    private Stack<Character> braces;
+    private Stack<Character> nesting;
 
     public Lexer(Reader reader, ComplexSymbolFactory factory) {
         this(reader);
         this.factory = factory;
         this.string = new StringBuilder();
-        this.braces = new Stack<>();
-    }
-
-    private Symbol symbol(int type) {
-        return symbol(Token.terminalNames[type], type);
-    }
-
-    private Symbol symbol(String name, int type) {
-        return factory.newSymbol(
-            name,
-            type,
-            new Location(yyline + 1, yycolumn + 1),
-            new Location(yyline + 1, yycolumn + yylength())
-        );
-    }
-
-    private Symbol symbol(int type, Object value) {
-        return symbol(Token.terminalNames[type], type, value);
+        this.nesting = new Stack<>();
     }
 
     private Symbol symbol(String name, int type, Object value) {
         return factory.newSymbol(
-            Token.terminalNames[type],
-            type,
+            name, type,
             new Location(yyline + 1, yycolumn + 1),
             new Location(yyline + 1, yycolumn + yylength()),
             value
         );
     }
 
+    private Symbol symbol(String name, int type) {
+        return factory.newSymbol(
+            name, type,
+            new Location(yyline + 1, yycolumn + 1),
+            new Location(yyline + 1, yycolumn + yylength())
+        );
+    }
+
+    private Symbol symbol(int type) {
+        return symbol(Token.terminalNames[type], type);
+    }
+
     private Symbol bool(boolean value) {
-        return symbol(value ? "true" : "false", Token.BOOL, Scalar.fromBoolean(value));
+        return symbol(Boolean.toString(value), Token.BOOL, value);
     }
 
     private Symbol integer(String text, int base) {
         if (base != 10) {
-            // remove "0x", "0b", "0o"
+            // Strip '0x', '0b' or '0o' prefixes
             text = text.substring(2);
         }
 
-        long number = Long.parseLong(text, base);
-        Scalar result = Scalar.fromInteger(number);
-        return symbol("integer", Token.INTEGER, result);
+        long value = Long.parseLong(text, base);
+        return symbol("integer", Token.INTEGER, value);
     }
 
     private Symbol decimal(String text) {
-        double number = Double.parseDouble(text);
-        Scalar result = Scalar.fromFloat(number);
-        return symbol("float", Token.FLOAT, result);
+        double value = Double.parseDouble(text);
+        return symbol("float", Token.FLOAT, value);
     }
 
-    private Symbol text(int kind, String value) {
-        Scalar result = Scalar.fromString(value);
-        return symbol(kind, result);
+    private Symbol identifier(String value) {
+        return symbol("identifier", Token.IDENTIFIER, value);
     }
 
-    private Symbol beginBracket(String text) {
+    private Symbol string(String value) {
+        return symbol("string", Token.STRING, value);
+    }
+
+    private Symbol beginNesting(String text) {
+        assert text.length() == 1;
+        char c = text.charAt(0);
+        nesting.push(c);
+
+        return switch (c) {
+            case '(' -> symbol(Token.LPAREN);
+            case '[' -> symbol(Token.LBRACKET);
+            case '{' -> symbol(Token.LBRACE);
+            default -> throw new IllegalStateException("Unexpected char value");
+        };
+    }
+
+    private Symbol endNesting(String text) {
         assert text.length() == 1;
         char c = text.charAt(0);
 
-        Symbol sym = null;
-        braces.push(c);
-
-        switch (c) {
-            case '(':
-                sym = symbol("(", Token.LPAREN);
-                break;
-            case '[':
-                sym = symbol("[", Token.LBRACKET);
-                break;
-            case '{':
-                sym = symbol("{", Token.LBRACE);
-                break;
-            default:
-                assert false;
+        if (nesting.isEmpty()) {
+            throw new RuntimeException("Unmatched '%c'".formatted(c));
         }
 
-        return sym;
-    }
-
-    private boolean isExpectedBracket(char bracket) {
-        if (braces.size() > 0) {
-            char peek = braces.pop();
-            return peek == '(' && bracket == ')'
-                || peek == '[' && bracket == ']'
-                || peek == '{' && bracket == '}';
+        char o = nesting.pop();
+        if ((c == ')' && o != '(') || (c == ']' && o != '[') || (c == '}' && o != '{')) {
+            throw new RuntimeException("'%c' does not match '%c'".formatted(c, o));
         }
 
-        return false;
-    }
-
-    private Symbol endBracket(String text) {
-        assert text.length() == 1;
-        char c = text.charAt(0);
-
-        if (!isExpectedBracket(c)) {
-            String msg = String.format("Unmatched '%c' in line %d, column %d", c, yyline + 1, yycolumn + 1);
-            throw new Error(msg);
-        }
-
-        Symbol sym = null;
-
-        switch (c) {
-            case ')':
-                sym = symbol(")", Token.RPAREN);
-                break;
-            case ']':
-                sym = symbol("]", Token.RBRACKET);
-                break;
-            case '}':
-                sym = symbol("}", Token.RBRACE);
-                break;
-            default:
-                assert false;
-        }
-
-        return sym;
+        return switch (c) {
+            case ')' -> symbol(Token.RPAREN);
+            case ']' -> symbol(Token.RBRACKET);
+            case '}' -> symbol(Token.RBRACE);
+            default -> throw new IllegalStateException("Unexpected char value");
+        };
     }
 %}
 
@@ -177,42 +141,29 @@ CommentContent       = ([^*]|\*+[^/*])*
 
 %%
 
+/* Keywords */
 <YYINITIAL> "true"           { return bool(true); }
 <YYINITIAL> "false"          { return bool(false); }
 <YYINITIAL> "as"             { return symbol("as", Token.AS); }
 <YYINITIAL> "is"             { return symbol("is", Token.IS); }
 <YYINITIAL> "in"             { return symbol("in", Token.IN); }
-<YYINITIAL> "array"          { return symbol("array", Token.TYPENAME_ARRAY); }
-<YYINITIAL> "bool"           { return symbol("bool", Token.TYPENAME_BOOL); }
-<YYINITIAL> "float"          { return symbol("float", Token.TYPENAME_FLOAT); }
-<YYINITIAL> "int"            { return symbol("int", Token.TYPENAME_INT); }
-<YYINITIAL> "string"         { return symbol("string", Token.TYPENAME_STRING); }
 <YYINITIAL> "len"            { return symbol("len", Token.LEN); }
 <YYINITIAL> "typeof"         { return symbol("typeof", Token.TYPEOF); }
+<YYINITIAL> "unset"          { return symbol("unset", Token.UNSET); }
 <YYINITIAL> "print"          { return symbol("print", Token.PRINT); }
 <YYINITIAL> "println"        { return symbol("println", Token.PRINTLN); }
 <YYINITIAL> "input"          { return symbol("input", Token.INPUT); }
-<YYINITIAL> "unset"          { return symbol("unset", Token.UNSET); }
 <YYINITIAL> "if"             { return symbol("if", Token.IF); }
 <YYINITIAL> "else"           { return symbol("else", Token.ELSE); }
 <YYINITIAL> "for"            { return symbol("for", Token.FOR); }
 <YYINITIAL> "foreach"        { return symbol("foreach", Token.FOREACH); }
 <YYINITIAL> "do"             { return symbol("do", Token.DO); }
 <YYINITIAL> "while"          { return symbol("while", Token.WHILE); }
-<YYINITIAL> {Identifier}     { return text(Token.IDENTIFIER, yytext()); }
-
-/* Literals */
-<YYINITIAL> {IntegerLiteral} { return integer(yytext(), 10); }
-<YYINITIAL> {DecimalLiteral}
-           |{SciNotLiteral}  { return decimal(yytext()); }
-<YYINITIAL> {HexNumLiteral}  { return integer(yytext(), 16); }
-<YYINITIAL> {OctNumLiteral}  { return integer(yytext(), 8); }
-<YYINITIAL> {BinNumLiteral}  { return integer(yytext(), 2); }
-<YYINITIAL> \"               { string.setLength(0); yybegin(ST_IN_STRING); }
+<YYINITIAL> {Identifier}     { return identifier(yytext()); }
 
 /* Symbols */
-<YYINITIAL> ("("|"["|"{")    { return beginBracket(yytext()); }
-<YYINITIAL> (")"|"]"|"}")    { return endBracket(yytext()); }
+<YYINITIAL> "("|"["|"{"      { return beginNesting(yytext()); }
+<YYINITIAL> ")"|"]"|"}"      { return endNesting(yytext()); }
 <YYINITIAL> "!"              { return symbol(Token.EXCLAMATION); }
 <YYINITIAL> ","              { return symbol(Token.COMMA); }
 <YYINITIAL> ";"              { return symbol(Token.SEMICOLON); }
@@ -220,8 +171,8 @@ CommentContent       = ([^*]|\*+[^/*])*
 /* Logic Operators */
 <YYINITIAL> ":="             { return symbol(":=", Token.DECLARATION); }
 <YYINITIAL> "="              { return symbol("=", Token.ASSIGN); }
-<YYINITIAL> "&&"             { return symbol("AND", Token.AND); }
-<YYINITIAL> "||"             { return symbol("OR", Token.OR); }
+<YYINITIAL> "&&"             { return symbol("&&", Token.AND); }
+<YYINITIAL> "||"             { return symbol("||", Token.OR); }
 <YYINITIAL> "=="             { return symbol("==", Token.EQUALS); }
 <YYINITIAL> "!="             { return symbol("!=", Token.NOT_EQUALS); }
 <YYINITIAL> "<"              { return symbol("<", Token.SMALLER); }
@@ -243,9 +194,17 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> {WhiteSpace}
            |{Comment}        { /* ignorar */ }
 
+/* Literals */
+<YYINITIAL> {IntegerLiteral} { return integer(yytext(), 10); }
+<YYINITIAL> {DecimalLiteral}
+           |{SciNotLiteral}  { return decimal(yytext()); }
+<YYINITIAL> {HexNumLiteral}  { return integer(yytext(), 16); }
+<YYINITIAL> {OctNumLiteral}  { return integer(yytext(), 8); }
+<YYINITIAL> {BinNumLiteral}  { return integer(yytext(), 2); }
+<YYINITIAL> \"               { yybegin(ST_IN_STRING); string.setLength(0); }
 
-<ST_IN_STRING> \"            { yybegin(YYINITIAL);
-                               return text(Token.STRING, string.toString()); }
+
+<ST_IN_STRING> \"            { yybegin(YYINITIAL); return string(string.toString()); }
 <ST_IN_STRING> [^\n\r\"\\]+  { string.append(yytext()); }
 <ST_IN_STRING> \\t           { string.append('\t'); }
 <ST_IN_STRING> \\n           { string.append('\n'); }

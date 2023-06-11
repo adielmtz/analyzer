@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents a dynamic list of Ast nodes.
+ */
 public final class AstList {
     private final List<Ast> list;
 
@@ -40,7 +43,7 @@ public final class AstList {
      */
     public Ast makeList() {
         Ast[] child = list.toArray(new Ast[0]);
-        return new Ast(AstKind.AST_STATEMENT_LIST, null, null, child);
+        return Ast.make(AstKind.AST_STATEMENT_LIST, child);
     }
 
     /**
@@ -56,6 +59,6 @@ public final class AstList {
         }
 
         Ast[] child = list.toArray(new Ast[0]);
-        return new Ast(AstKind.AST_ARRAY, null, null, child);
+        return Ast.make(AstKind.AST_ARRAY, child);
     }
 }

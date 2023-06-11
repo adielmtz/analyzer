@@ -1,14 +1,14 @@
 package org.automatas.engine;
 
+/**
+ * Represents all supported Ast types.
+ */
 public enum AstKind {
     /* Lists */
     AST_STATEMENT_LIST,
 
     /* Literals */
-    AST_BOOL,
-    AST_FLOAT,
-    AST_INTEGER,
-    AST_STRING,
+    AST_SCALAR,
     AST_IDENTIFIER,
 
     /* Arrays */

@@ -1,36 +1,82 @@
 package org.automatas.engine;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Ast {
+/**
+ * An AST is an abstract representation of a part of the input code.
+ */
+public final class Ast {
     private static final Ast[] EMPTY_CHILD = new Ast[0];
 
     public final AstKind kind;
-    public final Scalar value;
-    public final Object extra;
+    public final Object value;
+    public final ScalarType type;
     public final Ast[] child;
 
-    public static Ast scalar(AstKind kind, Scalar scalar) {
-        return new Ast(kind, scalar, null, EMPTY_CHILD);
-    }
-
+    /**
+     * Creates an Ast instance for Ast nodes.
+     *
+     * @param kind  The kind of the Ast instance.
+     * @param child The children Ast nodes.
+     * @return The Ast instance.
+     */
     public static Ast make(AstKind kind, Ast... child) {
         return new Ast(kind, null, null, child);
     }
 
-    public static Ast makeTypeCast(Ast expr, ScalarType type) {
-        return new Ast(AstKind.AST_AS, null, type, new Ast[] { expr });
+    /**
+     * Creates an AST_AS node for type cast.
+     *
+     * @param expr The expression to cast.
+     * @param type The type to cast.
+     * @return The Ast instance.
+     */
+    public static Ast typeCast(Ast expr, Ast type) {
+        return make(AstKind.AST_AS, expr, type);
     }
 
-    public static Ast makeTypeCheck(Ast expr, ScalarType type) {
-        return new Ast(AstKind.AST_IS, null, type, new Ast[] { expr });
+    /**
+     * Creates an AST_IS node for type check.
+     *
+     * @param expr The expression to test.
+     * @param type The type to check.
+     * @return The Ast instance.
+     */
+    public static Ast typeCheck(Ast expr, Ast type) {
+        return make(AstKind.AST_IS, expr, type);
     }
 
-    protected Ast(AstKind kind, Scalar value, Object extra, Ast[] child) {
+    /**
+     * Creates an Ast instance for literal values.
+     *
+     * @param value The literal value.
+     * @param type  The type of the value.
+     * @return The Ast instance.
+     */
+    public static Ast scalar(Object value, ScalarType type) {
+        return new Ast(AstKind.AST_SCALAR, value, type, EMPTY_CHILD);
+    }
+
+    /**
+     * Creates an identifier Ast node.
+     *
+     * @param name The name of the identifier.
+     * @return The Ast instance.
+     */
+    public static Ast identifier(String name) {
+        return new Ast(AstKind.AST_IDENTIFIER, name, ScalarType.STRING, EMPTY_CHILD);
+    }
+
+    /**
+     * Ast constructor.
+     *
+     * @param kind  The kind of the Ast instance.
+     * @param value The value of the Ast (scalar).
+     * @param type  The type of the value.
+     * @param child The array of child Ast nodes.
+     */
+    private Ast(AstKind kind, Object value, ScalarType type, Ast[] child) {
         this.kind = kind;
         this.value = value;
-        this.extra = extra;
+        this.type = type;
         this.child = child;
     }
 
@@ -47,6 +93,7 @@ public class Ast {
         sb.append(padding).append("Ast {\n")
                 .append(innerPadding).append("kind:  ").append(kind).append("\n")
                 .append(innerPadding).append("value: ").append(value).append("\n")
+                .append(innerPadding).append("type: ").append(type).append("\n")
                 .append(innerPadding).append("child: {\n");
 
         for (Ast ast : child) {
