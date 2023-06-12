@@ -4,11 +4,11 @@ package org.automatas.engine;
  * Represents the type of the Scalar object.
  */
 public enum ScalarType {
-    ARRAY(),
-    BOOL(),
-    FLOAT(),
-    INT(),
-    STRING();
+    ARRAY,
+    BOOL,
+    FLOAT,
+    INT,
+    STRING;
 
     @Override
     public String toString() {
