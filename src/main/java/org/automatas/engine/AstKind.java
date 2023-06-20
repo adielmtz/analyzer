@@ -34,7 +34,7 @@ public enum AstKind {
     AST_MULTIPLY,
     AST_POW,
     AST_DIVIDE,
-    AST_MODULUS,
+    AST_MODULO,
 
     /* Increment/Decrement */
     AST_POST_INC,

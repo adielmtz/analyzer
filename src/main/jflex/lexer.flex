@@ -188,7 +188,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "*"              { return symbol("*", Token.MULTIPLY); }
 <YYINITIAL> "**"             { return symbol("**", Token.POW); }
 <YYINITIAL> "/"              { return symbol("/", Token.DIVIDE); }
-<YYINITIAL> "%"              { return symbol("%", Token.MODULUS); }
+<YYINITIAL> "%"              { return symbol("%", Token.MODULO); }
 
 /* Ignore comments & whitespace */
 <YYINITIAL> {WhiteSpace}

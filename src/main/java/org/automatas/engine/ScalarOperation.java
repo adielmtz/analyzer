@@ -161,7 +161,7 @@ public final class ScalarOperation {
      * @param b The second operand.
      * @return The result scalar.
      */
-    public static Scalar modulus(Scalar a, Scalar b) {
+    public static Scalar modulo(Scalar a, Scalar b) {
         if (a.isArray() || a.isString() || b.isArray() || b.isString()) {
             throwIncompatibleTypes("%", a.getType(), b.getType());
         }

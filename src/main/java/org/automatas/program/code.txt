@@ -37,7 +37,7 @@ subtraction    := 5 - 10;
 multiplication := 9 * 23;
 power          := 2 ** 64;
 division       := 4 / 2;
-modulus        := 10 % 2;
+modulo         := 10 % 2;
 
 // Logic operators (returns boolean)
 and         := true && false;

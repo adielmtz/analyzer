@@ -83,7 +83,7 @@ public final class Executor {
             case AST_MULTIPLY:
             case AST_POW:
             case AST_DIVIDE:
-            case AST_MODULUS:
+            case AST_MODULO:
                 executeScalarOperations(ast, result);
                 break;
             case AST_POST_INC:
@@ -550,7 +550,7 @@ public final class Executor {
             case AST_MULTIPLY -> ScalarOperation.multiply(a, b);
             case AST_POW -> ScalarOperation.pow(a, b);
             case AST_DIVIDE -> ScalarOperation.divide(a, b);
-            case AST_MODULUS -> ScalarOperation.modulus(a, b);
+            case AST_MODULO -> ScalarOperation.modulo(a, b);
             default -> throw new IllegalStateException("Unexpected value: " + ast.kind);
         };
 

@@ -22,7 +22,7 @@ terminal AND, OR;
 
 /* Arithmetic operators */
 terminal PLUS, MINUS, MULTIPLY;
-terminal POW, DIVIDE, MODULUS;
+terminal POW, DIVIDE, MODULO;
 terminal INCREMENT, DECREMENT;
 
 /* Keywords */
@@ -58,7 +58,7 @@ precedence nonassoc INCREMENT, DECREMENT;
 precedence nonassoc ELSE, LBRACKET, RBRACKET;
 
 precedence left PLUS, MINUS;
-precedence left MULTIPLY, POW, DIVIDE, MODULUS;
+precedence left MULTIPLY, POW, DIVIDE, MODULO;
 precedence left AND, OR, AS, IS;
 
 start with top_statement;
@@ -120,7 +120,7 @@ expr ::=
   | expr:a MULTIPLY expr:b                  {: RESULT = Ast.make(AstKind.AST_MULTIPLY, a, b); :}
   | expr:a POW expr:b                       {: RESULT = Ast.make(AstKind.AST_POW, a, b); :}
   | expr:a DIVIDE expr:b                    {: RESULT = Ast.make(AstKind.AST_DIVIDE, a, b); :}
-  | expr:a MODULUS expr:b                   {: RESULT = Ast.make(AstKind.AST_MODULUS, a, b); :}
+  | expr:a MODULO expr:b                    {: RESULT = Ast.make(AstKind.AST_MODULO, a, b); :}
   | expr:a EQUALS expr:b                    {: RESULT = Ast.make(AstKind.AST_EQUALS, a, b); :}
   | expr:a NOT_EQUALS expr:b                {: RESULT = Ast.make(AstKind.AST_NOT_EQUALS, a, b); :}
   | expr:a SMALLER expr:b                   {: RESULT = Ast.make(AstKind.AST_SMALLER, a, b); :}
