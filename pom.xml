@@ -17,7 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>com.github.vbmacher</groupId>
-            <artifactId>java-cup-runtime</artifactId>
+            <artifactId>cup-maven-plugin</artifactId>
             <version>11b-20160615-2</version>
         </dependency>
     </dependencies>
@@ -27,7 +27,7 @@
             <plugin>
                 <groupId>de.jflex</groupId>
                 <artifactId>jflex-maven-plugin</artifactId>
-                <version>1.8.2</version>
+                <version>1.9.1</version>
                 <executions>
                     <execution>
                         <goals>
