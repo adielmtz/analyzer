@@ -14,52 +14,100 @@ terminal String  STRING;
 terminal String  LABEL;
 
 /* Logic operators */
-terminal DECLARATION, ASSIGN;
-terminal EQUALS, NOT_EQUALS;
-terminal SMALLER, SMALLER_OR_EQUAL;
-terminal GREATER, GREATER_OR_EQUAL;
-terminal AND, OR;
+terminal DECLARATION;
+terminal ASSIGN;
+terminal EQUALS;
+terminal NOT_EQUALS;
+terminal SMALLER;
+terminal SMALLER_OR_EQUAL;
+terminal GREATER;
+terminal GREATER_OR_EQUAL;
+terminal AND;
+terminal OR;
 
 /* Arithmetic operators */
-terminal PLUS, MINUS, MULTIPLY;
-terminal POW, DIVIDE, MODULO;
-terminal INCREMENT, DECREMENT;
+terminal PLUS;
+terminal MINUS;
+terminal MULTIPLY;
+terminal POW;
+terminal DIVIDE;
+terminal MODULO;
+terminal INCREMENT;
+terminal DECREMENT;
 
 /* Keywords */
-terminal PRINT, PRINTLN, UNSET, LEN;
-terminal TYPEOF, AS, IS, IN, INPUT;
-terminal FOR, FOREACH, DO, WHILE;
-terminal IF, ELSE;
+terminal PRINT;
+terminal PRINTLN;
+terminal UNSET;
+terminal LEN;
+terminal TYPEOF;
+terminal AS;
+terminal IS;
+terminal IN;
+terminal INPUT;
+terminal FOR;
+terminal FOREACH;
+terminal DO;
+terminal WHILE;
+terminal IF;
+terminal ELSE;
 terminal NOELSE;
 
 /* Symbols */
-terminal LPAREN, RPAREN;
-terminal LBRACKET, RBRACKET;
-terminal LBRACE, RBRACE;
+terminal LPAREN;
+terminal RPAREN;
+terminal LBRACKET;
+terminal RBRACKET;
+terminal LBRACE;
+terminal RBRACE;
 terminal EXCLAMATION;
-terminal COMMA, SEMICOLON;
+terminal COMMA;
+terminal SEMICOLON;
 
 /* Statements */
 non terminal AstList statement_list;
 non terminal Ast top_statement;
-non terminal Ast statement, if_statement, if_stmt_without_else;
+non terminal Ast statement;
+non terminal Ast if_statement;
+non terminal Ast if_stmt_without_else;
 
 /* Expressions */
-non terminal AstList print_expr_list, array_expr_value_list;
-non terminal Ast expr, array_expr, print_expr, optional_expr;
-non terminal Ast scalar, identifier, variable, array_access;
+non terminal AstList print_expr_list;
+non terminal AstList array_expr_value_list;
+non terminal Ast expr;
+non terminal Ast array_expr;
+non terminal Ast print_expr;
+non terminal Ast optional_expr;
+non terminal Ast scalar;
+non terminal Ast identifier;
+non terminal Ast variable;
+non terminal Ast array_access;
 
-precedence nonassoc DECLARATION, ASSIGN;
+precedence nonassoc DECLARATION;
+precedence nonassoc ASSIGN;
 precedence nonassoc EXCLAMATION;
-precedence nonassoc EQUALS, NOT_EQUALS;
-precedence nonassoc SMALLER, SMALLER_OR_EQUAL;
-precedence nonassoc GREATER, GREATER_OR_EQUAL;
-precedence nonassoc INCREMENT, DECREMENT;
-precedence nonassoc ELSE, LBRACKET, RBRACKET;
+precedence nonassoc EQUALS;
+precedence nonassoc NOT_EQUALS;
+precedence nonassoc SMALLER;
+precedence nonassoc SMALLER_OR_EQUAL;
+precedence nonassoc GREATER;
+precedence nonassoc GREATER_OR_EQUAL;
+precedence nonassoc INCREMENT;
+precedence nonassoc DECREMENT;
+precedence nonassoc ELSE;
+precedence nonassoc LBRACKET;
+precedence nonassoc RBRACKET;
 
-precedence left PLUS, MINUS;
-precedence left MULTIPLY, POW, DIVIDE, MODULO;
-precedence left AND, OR, AS, IS;
+precedence left PLUS;
+precedence left MINUS;
+precedence left MULTIPLY;
+precedence left POW;
+precedence left DIVIDE;
+precedence left MODULO;
+precedence left AND;
+precedence left OR;
+precedence left AS;
+precedence left IS;
 
 start with top_statement;
 
