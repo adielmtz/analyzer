@@ -10,8 +10,8 @@ import org.automatas.engine.ScalarType;
 terminal boolean BOOL;
 terminal double  FLOAT;
 terminal long    INTEGER;
-terminal String  IDENTIFIER;
 terminal String  STRING;
+terminal String  LABEL;
 
 /* Logic operators */
 terminal DECLARATION, ASSIGN;
@@ -47,7 +47,7 @@ non terminal Ast statement, if_statement, if_stmt_without_else;
 /* Expressions */
 non terminal AstList print_expr_list, array_expr_value_list;
 non terminal Ast expr, array_expr, print_expr, optional_expr;
-non terminal Ast scalar, ident, array_access, variable;
+non terminal Ast scalar, identifier, variable, array_access;
 
 precedence nonassoc DECLARATION, ASSIGN;
 precedence nonassoc EXCLAMATION;
@@ -79,7 +79,8 @@ statement ::=
   | WHILE expr:e statement:s                {: RESULT = Ast.make(AstKind.AST_WHILE, e, s); :}
   | FOR expr:a SEMICOLON expr:b SEMICOLON expr:c statement:s
                                             {: RESULT = Ast.make(AstKind.AST_FOR, a, b, c, s); :}
-  | FOREACH ident:i IN expr:e statement:s   {: RESULT = Ast.make(AstKind.AST_FOREACH, i, e, s); :}
+  | FOREACH identifier:i IN expr:e statement:s
+                                            {: RESULT = Ast.make(AstKind.AST_FOREACH, i, e, s); :}
   | PRINT print_expr_list:pel SEMICOLON     {: RESULT = pel.makeList(); :}
   | PRINTLN expr:e SEMICOLON                {: RESULT = Ast.make(AstKind.AST_PRINTLN, e); :}
   | expr:e SEMICOLON                        {: RESULT = e; :}
@@ -128,8 +129,8 @@ expr ::=
   | expr:a GREATER expr:b                   {: RESULT = Ast.make(AstKind.AST_GREATER, a, b); :}
   | expr:a GREATER_OR_EQUAL expr:b          {: RESULT = Ast.make(AstKind.AST_GREATER_OR_EQUAL, a, b); :}
   | EXCLAMATION expr:e                      {: RESULT = Ast.make(AstKind.AST_BOOL_NOT, e); :}
-  | expr:e AS ident:i                       {: RESULT = Ast.typeCast(e, i); :}
-  | expr:e IS ident:i                       {: RESULT = Ast.typeCheck(e, i); :}
+  | expr:e AS identifier:i                  {: RESULT = Ast.typeCast(e, i); :}
+  | expr:e IS identifier:i                  {: RESULT = Ast.typeCheck(e, i); :}
   | LEN LPAREN expr:e RPAREN                {: RESULT = Ast.make(AstKind.AST_LEN, e); :}
   | TYPEOF LPAREN expr:e RPAREN             {: RESULT = Ast.make(AstKind.AST_TYPEOF, e); :}
   | INPUT LPAREN optional_expr:oe RPAREN    {: RESULT = Ast.make(AstKind.AST_INPUT, oe); :}
@@ -137,17 +138,17 @@ expr ::=
   | scalar:s                                {: RESULT = s; :}
 ;
 
+identifier ::=
+    LABEL:l                                 {: RESULT = Ast.identifier(l); :}
+;
+
 optional_expr ::=
     expr:e                                  {: RESULT = e; :}
   | /* %empty */
 ;
 
-ident ::=
-    IDENTIFIER:id                           {: RESULT = Ast.identifier(id); :}
-;
-
 variable ::=
-    ident:i                                 {: RESULT = i; :}
+    identifier:i                            {: RESULT = i; :}
   | array_access:aa                         {: RESULT = aa; :}
 ;
 

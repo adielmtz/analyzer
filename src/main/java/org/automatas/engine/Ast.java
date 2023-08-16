@@ -56,13 +56,13 @@ public final class Ast {
     }
 
     /**
-     * Creates an identifier Ast node.
+     * Creates an Ast node for variable fetch.
      *
      * @param name The name of the identifier.
      * @return The Ast instance.
      */
     public static Ast identifier(String name) {
-        return new Ast(AstKind.AST_IDENTIFIER, name, ScalarType.STRING, EMPTY_CHILD);
+        return new Ast(AstKind.AST_IDENTIFIER, name, null, EMPTY_CHILD);
     }
 
     /**

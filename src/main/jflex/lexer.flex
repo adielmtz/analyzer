@@ -70,8 +70,8 @@ import java.util.Stack;
         return symbol("float", Token.FLOAT, value);
     }
 
-    private Symbol identifier(String value) {
-        return symbol("identifier", Token.IDENTIFIER, value);
+    private Symbol label(String value) {
+        return symbol("label", Token.LABEL, value);
     }
 
     private Symbol string(String value) {
@@ -121,7 +121,7 @@ import java.util.Stack;
 NewLine        = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace     = {NewLine}|[ \t\f]
-Identifier     = [:jletter:][:jletterdigit:]*
+Label          = [:jletter:][:jletterdigit:]*
 IntegerLiteral = 0|[1-9][0-9]*
 DecimalLiteral = ({IntegerLiteral}?"."{IntegerLiteral})|({IntegerLiteral}"."{IntegerLiteral}?)
 SciNotLiteral  = (({IntegerLiteral}|{DecimalLiteral})[eE][+-]?{IntegerLiteral})
@@ -159,7 +159,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "foreach"        { return symbol("foreach", Token.FOREACH); }
 <YYINITIAL> "do"             { return symbol("do", Token.DO); }
 <YYINITIAL> "while"          { return symbol("while", Token.WHILE); }
-<YYINITIAL> {Identifier}     { return identifier(yytext()); }
+<YYINITIAL> {Label}          { return label(yytext()); }
 
 /* Symbols */
 <YYINITIAL> "("|"["|"{"      { return beginNesting(yytext()); }
