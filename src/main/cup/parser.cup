@@ -72,8 +72,8 @@ non terminal Ast if_statement;
 non terminal Ast if_stmt_without_else;
 
 /* Expressions */
+non terminal AstList expr_list;
 non terminal AstList print_expr_list;
-non terminal AstList array_expr_value_list;
 non terminal Ast expr;
 non terminal Ast array_expr;
 non terminal Ast print_expr;
@@ -186,18 +186,18 @@ expr ::=
   | scalar:s                                {: RESULT = s; :}
 ;
 
-identifier ::=
-    LABEL:l                                 {: RESULT = Ast.identifier(l); :}
-;
-
 optional_expr ::=
     expr:e                                  {: RESULT = e; :}
   | /* %empty */
 ;
 
-variable ::=
-    identifier:i                            {: RESULT = i; :}
-  | array_access:aa                         {: RESULT = aa; :}
+expr_list ::=
+    expr_list:el COMMA optional_expr:oe     {: RESULT = el.add(oe); :}
+  | optional_expr:oe                        {: RESULT = AstList.beginList(oe); :}
+;
+
+identifier ::=
+    LABEL:l                                 {: RESULT = Ast.identifier(l); :}
 ;
 
 scalar ::=
@@ -208,18 +208,17 @@ scalar ::=
   | array_expr:ae                           {: RESULT = ae; :}
 ;
 
+variable ::=
+    identifier:i                            {: RESULT = i; :}
+  | array_access:aa                         {: RESULT = aa; :}
+  | struct_access:sa                        {: RESULT = sa; :}
+;
+
 array_access ::=
     variable:v LBRACKET optional_expr:oe RBRACKET
                                             {: RESULT = Ast.make(AstKind.AST_ARRAY_ACCESS, v, oe); :}
 ;
 
 array_expr ::=
-    LBRACKET array_expr_value_list:aevl RBRACKET
-                                            {: RESULT = aevl.makeArray(); :}
-;
-
-array_expr_value_list ::=
-    array_expr_value_list:aevl COMMA optional_expr:oe
-                                            {: RESULT = aevl.add(oe); :}
-  | optional_expr:oe                        {: RESULT = AstList.beginList(oe); :}
+    LBRACKET expr_list:el RBRACKET          {: RESULT = el.makeArray(); :}
 ;
