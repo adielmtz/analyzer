@@ -211,7 +211,6 @@ scalar ::=
 variable ::=
     identifier:i                            {: RESULT = i; :}
   | array_access:aa                         {: RESULT = aa; :}
-  | struct_access:sa                        {: RESULT = sa; :}
 ;
 
 array_access ::=
