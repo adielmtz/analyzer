@@ -1,41 +1,39 @@
 # Analyzer
 
-Parser & interpreter for a custom language.
+Parser & interpreter for a custom programming language.
 This project was made for study and research about compiler construction.
 
 ## Why "Analyzer"?
 
 1. I'm bad at naming things.
-2. This project began as a simple lexical analysis program. The parser and interpreter were added later.
-
-_I might rename it in the future_
+2. This project began as a lexical analysis tool; the parser and interpreter were added later on.
+   _I may rename it in the future_
 
 ## Types
 
-The language supports these 5 primitive types:
+The language supports these primitive types:
 
-1. `array` (java.util.List).
-2. `bool` (java.lang.Boolean).
-3. `float` (java.lang.Double).
-4. `integer` (java.lang.Long).
-5. `string` (java.lang.String).
+1. `array` (java.util.ArrayList)
+2. `bool` (java.lang.Boolean)
+3. `float` (java.lang.Double)
+4. `int` (java.lang.Long)
+5. `string` (java.lang.String)
 
-~~(Arrays not supported _yet_)~~ Arrays are supported!
+Numeric literals can be expressed in various forms:
 
-Numeric literals can be expressed in different ways:
-
-* Binary: `0b100101`.
-* Hexadecimal: `0xffa500`.
-* Octal: `0o27`.
-* Scientific: `1.30e5`.
+* Bin: `0b00001010`
+* Hex: `0xffa500`
+* Oct: `0o276`
+* Exp: `1.30e5`
 
 ## Comments
 
 ```
-// Line comment
+// This is a line comment.
 
 /*
-    Block comment
+    And this is a
+    block comment.
  */
 ```
 
@@ -43,78 +41,132 @@ Numeric literals can be expressed in different ways:
 
 ### Declaring a variable
 
-The `:=` operator (borrowed from Go) can be used to declare a new variable:
+Use the `:=` operator (borrowed from Go) to declare a new variable in the current scope.
 
 ```
-my_bool   := true;
-my_float  := 3.1415;
-my_int    := 1;
-my_string := "Waah";
-my_array  := [1, 2, 3];
+my_var := "Hello";
 ```
 
-The engine will throw a fatal error if the variable already exists:
+The interpreter will throw a fatal error if you attempt to re-declare a variable within the same scope.
 
 ```
-my_bool := false; // Fatal Error: 'my_bool' is already defined.
+my_var := "Again!"; // Fatal Error: 'my_var' is already defined.
+```
+
+However, you can declare a variable with the same identifier (name) within a nested scope.
+
+```
+my_var := "Outer";
+
+{
+    // This is allowed, as the inner-most variable
+    // shadows the variable in the parent scope.
+    my_var := "Inner";
+    println my_var;
+}
+
+println my_var;
 ```
 
 ### Using a variable
 
-The usual behaviour from most programming languages:
+Variables can be assigned a value with the `=` operator.
 
 ```
+my_var = "Hello there";
+println my_var;
+```
+
+And the interpreter will throw a fatal error if the variable is undefined.
+
+```
+unknown = "???"; // Fatal Error: undefined variable 'unknown'.
+```
+
+Variables can store any type of value at any moment:
+
+```
+my_var = [1, 2, 3];
 my_var = true;
-my_var = "A113";
+my_var = 3.1415;
 my_var = 2023;
+my_var = "A113";
 ```
 
-The engine will throw a fatal error if the variable is undefined:
+The `is` operator checks if the given value is of a specific type, while the `as` operator
+casts the value from one type to another:
 
 ```
-unknown = "?"; // Fatal Error: undefined variable 'unknown'.
+// Check if the value is an string
+if my_var is string {
+
+    // Cast value to integer
+    my_int := my_var as int;
+
+}
 ```
 
-For arrays, you can access their values using the usual array syntax:
+Use the `delete` operator to _delete_ a variable:
 
 ```
-value := array[0];
-array[0] = "hello";
+delete my_var;
+println my_var; // Fatal Error: undefined variable 'my_var'.
 ```
 
-You can also add new values to the end of the array using the `[]` syntax (borrowed from PHP):
+Arrays follow the usual bracket-style syntax:
 
 ```
-array := []; // empty array
-array[] = "a"; // add value
-println array[0];
+arr := ["a", "b", "c"];
+val := arr[1];
+arr[0] = "x";
+```
+
+Arrays grow dynamically, so you can append values by using the `[]` syntax (borrowed from PHP):
+
+```
+arr := []; // Empty array
+arr[] = "hi"; // Append a string (note that you have to use = operator).
+println arr[0];
+```
+
+And with the `delete` operator, you can delete one value from the array (the array will be re-indexed):
+
+```
+arr := ["a", "b", "c"];
+println arr[0]; // "a"
+delete arr[0];
+println arr[0]; // "b"
 ```
 
 ## Logic operators
 
-The language supports the common logic operators:
+| Operator         | Meaning |
+|------------------|---------|
+| `expr && expr`   | and     |
+| `expr \|\| expr` | or      |
+| `!expr`          | not     |
 
-* `&&` and.
-* `||` or.
-* `==` equal.
-* `!=` not equal.
-* `<` smaller.
-* `<=` smaller or equal.
-* `>` greater.
-* `>=` greater or equal.
+## Relational operators
+
+| Operator       | Meaning          |
+|----------------|------------------|
+| `expr == expr` | equal            |
+| `expr != expr` | not equal        |
+| `expr < expr`  | less             |
+| `expr <= expr` | less or equal    |
+| `expr > expr`  | greater          |
+| `expr >= expr` | greater or equal |
 
 ## Arithmetic operators
 
-* `+` add / string concatenation.
-* `-` subtract.
-* `*` multiply.
-* `**` power.
-* `/` division.
-* `%` modulus.
-
-## Expressions
-
-All expressions must be terminated with a semicolon `;`.
+| Operator       | Meaning                  |
+|----------------|--------------------------|
+| `expr + expr`  | addition / concatenation |
+| `expr - expr`  | subtraction              |
+| `expr * expr`  | multiplication           |
+| `expr / expr`  | division                 |
+| `expr % expr`  | modulo                   |
+| `expr ** expr` | exponentiation           |
 
 ## Control structures
 
@@ -162,25 +214,4 @@ println "Hello!";    // output: "Hello!\n"
 // These two statements are equivalent:
 print "Waah\n";
 println "Waah";
-```
-
-### Unset
-
-Removes a variable from the program.
-
-```
-var := "It's alive!"; // Declare a variable
-
-print var; // Ok.
-unset var;
-print var; // Fatal Error: undefined variable 'var'.
-```
-
-For an array, it removes the value at the given index:
-```
-array := [1, 2, 3];
-
-print array[0]; // 1
-unset array[0];
-print array[0]; // 2
 ```
