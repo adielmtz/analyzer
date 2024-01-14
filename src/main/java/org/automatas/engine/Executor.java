@@ -25,13 +25,8 @@ public final class Executor {
 
             Symbol result = parser.parse();
             Ast root = (Ast) result.value;
-
             structs = parser.getDeclaredStructs();
-
-            scope.beginBlock();
-            var node = new Node();
-            execute(root, node);
-            scope.endBlock();
+            execute(root, new Node());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -482,7 +477,14 @@ public final class Executor {
             fatalError("Attempt to assign property '%s' on non-object value.", member);
         }
 
-        var reference = new StructReference(object, member);
+        StructInstance instance = object.toObject();
+        assert instance != null;
+
+        if (!instance.hasProperty(member)) {
+            fatalError("Undefined property %s::%s.", instance.getStructName(), member);
+        }
+
+        var reference = new StructReference(instance, member);
         Scalar value = reference.getValue();
 
         result.setType(NodeType.CONSTANT);
