@@ -2,6 +2,7 @@ package org.automatas.engine;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -236,6 +237,8 @@ public final class Scalar implements Comparable<Scalar> {
             return arrayToString();
         } else if (isObject()) {
             return objectToString();
+        } else if (value == null) {
+            return "";
         } else {
             return value.toString();
         }
@@ -270,7 +273,39 @@ public final class Scalar implements Comparable<Scalar> {
     }
 
     private String objectToString() {
-        return "";
+        return objectToString(0, new HashSet<>());
+    }
+
+    public String objectToString(int depth, HashSet<Scalar> protect) {
+        StructInstance instance = toObject();
+        assert instance != null;
+
+        var sb = new StringBuilder();
+        String padding = " ".repeat(4 * depth);
+        String innerPadding = " ".repeat(4 * (depth + 1));
+
+        sb.append(instance.getStructName());
+        sb.append(" {\n");
+
+        for (String property : instance.getPropertyNames()) {
+            sb.append(innerPadding).append(property).append(": ");
+            Scalar value = instance.getPropertyValue(property);
+
+            if (value.isObject()) {
+                if (protect.contains(value)) {
+                    sb.append("*RECURSION*");
+                } else {
+                    sb.append(value.objectToString(depth + 1, protect));
+                }
+            } else {
+                sb.append(value);
+            }
+
+            sb.append("\n");
+        }
+
+        sb.append(padding).append("}");
+        return sb.toString();
     }
 
     /**

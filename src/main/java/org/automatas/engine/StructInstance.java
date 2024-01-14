@@ -1,6 +1,7 @@
 package org.automatas.engine;
 
 import java.util.HashMap;
+import java.util.Set;
 
 public class StructInstance {
     private final String name;
@@ -11,11 +12,23 @@ public class StructInstance {
         this.members = members;
     }
 
-    public Scalar getValue(String member) {
+    public boolean hasProperty(String name) {
+        return members.containsKey(name);
+    }
+
+    public String getStructName() {
+        return name;
+    }
+
+    public Set<String> getPropertyNames() {
+        return members.keySet();
+    }
+
+    public Scalar getPropertyValue(String member) {
         return members.get(member);
     }
 
-    public void setValue(String member, Scalar value) {
+    public void setPropertyValue(String member, Scalar value) {
         members.put(member, value);
     }
 }

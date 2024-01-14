@@ -15,12 +15,12 @@ public class StructReference implements Reference {
 
     @Override
     public Scalar getValue() {
-        return instance.getValue(member);
+        return instance.getPropertyValue(member);
     }
 
     @Override
     public void setValue(Scalar value) {
-        instance.setValue(member, value);
+        instance.setPropertyValue(member, value);
     }
 
     @Override
