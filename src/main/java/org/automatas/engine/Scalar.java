@@ -1,6 +1,7 @@
 package org.automatas.engine;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -65,6 +66,10 @@ public final class Scalar implements Comparable<Scalar> {
         return new Scalar(value, ScalarType.STRING);
     }
 
+    public static Scalar makeObject(String name, HashMap<String, Scalar> members) {
+        return new Scalar(new StructInstance(name, members), ScalarType.OBJECT);
+    }
+
     /**
      * Scalar constructor.
      *
@@ -83,6 +88,7 @@ public final class Scalar implements Comparable<Scalar> {
             case BOOL, INT -> Long.compare(toLong(), o.toLong());
             case FLOAT -> Double.compare(toDouble(), o.toDouble());
             case STRING -> toString().compareTo(o.toString());
+            case OBJECT -> -1; // TODO: Implement object comparison
         };
     }
 
@@ -149,6 +155,10 @@ public final class Scalar implements Comparable<Scalar> {
         return type == ScalarType.STRING;
     }
 
+    public boolean isObject() {
+        return type == ScalarType.OBJECT;
+    }
+
     /**
      * Returns the Scalar value as a List.
      *
@@ -179,6 +189,7 @@ public final class Scalar implements Comparable<Scalar> {
             case FLOAT -> toDouble() != 0d;
             case INT -> toLong() != 0;
             case STRING -> toString().length() > 0;
+            case OBJECT -> true; // TODO: Implement proper object->toBoolean()
         };
     }
 
@@ -193,6 +204,7 @@ public final class Scalar implements Comparable<Scalar> {
             case FLOAT -> (double) value;
             case INT -> (double) toLong();
             case STRING -> tryParseDouble();
+            case OBJECT -> 1.d; // TODO: Implement proper object->toDouble()
         };
     }
 
@@ -207,6 +219,7 @@ public final class Scalar implements Comparable<Scalar> {
             case FLOAT -> (long) toDouble();
             case INT -> (long) value;
             case STRING -> tryParseLong();
+            case OBJECT -> 1; // TODO: Implement proper object->toLong()
         };
     }
 
@@ -221,9 +234,19 @@ public final class Scalar implements Comparable<Scalar> {
             return (String) value;
         } else if (isArray()) {
             return arrayToString();
+        } else if (isObject()) {
+            return objectToString();
         } else {
             return value.toString();
         }
+    }
+
+    public StructInstance toObject() {
+        if (isObject()) {
+            return (StructInstance) value;
+        }
+
+        return null;
     }
 
     private String arrayToString() {
@@ -244,6 +267,10 @@ public final class Scalar implements Comparable<Scalar> {
         builder.append(']');
 
         return builder.toString();
+    }
+
+    private String objectToString() {
+        return "";
     }
 
     /**

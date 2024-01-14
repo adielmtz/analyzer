@@ -11,9 +11,10 @@ public enum AstKind {
     AST_SCALAR,
     AST_IDENTIFIER,
 
-    /* Arrays */
+    /* Arrays & Struct */
     AST_ARRAY,
     AST_ARRAY_ACCESS,
+    AST_STRUCT_ACCESS,
 
     /* Logic operators */
     AST_DECLARATION,
@@ -47,6 +48,7 @@ public enum AstKind {
     AST_TYPEOF,
     AST_AS,
     AST_IS,
+    AST_NEW,
     AST_PRINT,
     AST_PRINTLN,
     AST_INPUT,

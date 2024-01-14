@@ -10,10 +10,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public final class Executor {
     private final ScopeManager scope = new ScopeManager();
+    private HashMap<String, Ast> structs;
 
     public void executeFile(String filename) {
         try (var reader = new FileReader(filename)) {
@@ -23,6 +25,8 @@ public final class Executor {
 
             Symbol result = parser.parse();
             Ast root = (Ast) result.value;
+
+            structs = parser.getDeclaredStructs();
 
             scope.beginBlock();
             var node = new Node();
@@ -60,6 +64,9 @@ public final class Executor {
                 break;
             case AST_ARRAY_ACCESS:
                 executeArrayAccess(ast, result);
+                break;
+            case AST_STRUCT_ACCESS:
+                executeStructAccess(ast, result);
                 break;
             case AST_AND:
                 executeLogicAnd(ast, result);
@@ -103,6 +110,9 @@ public final class Executor {
                 break;
             case AST_IS:
                 executeTypeCheck(ast, result);
+                break;
+            case AST_NEW:
+                executeNewInstance(ast, result);
                 break;
             case AST_PRINT:
             case AST_PRINTLN:
@@ -151,7 +161,6 @@ public final class Executor {
         result.setValue(null);
     }
 
-    @SuppressWarnings("unchecked")
     private void executeScalar(Ast ast, Node result) {
         assert ast.value != null;
         assert ast.child.length == 0;
@@ -222,7 +231,12 @@ public final class Executor {
             case FLOAT -> Scalar.makeFloat(original.toDouble());
             case INT -> Scalar.makeInt(original.toLong());
             case STRING -> Scalar.makeString(original.toString());
+            case OBJECT -> null;
         };
+
+        if (casted == null) {
+            fatalError("Cannot cast to object.");
+        }
 
         result.setType(NodeType.CONSTANT);
         result.setValue(casted);
@@ -254,6 +268,29 @@ public final class Executor {
 
         result.setType(NodeType.CONSTANT);
         result.setValue(isSameType);
+    }
+
+    private void executeNewInstance(Ast ast, Node result) {
+        assert ast.child.length == 1;
+
+        Ast identifier = ast.child[0];
+        String name = identifier.value.toString();
+
+        if (!structs.containsKey(name)) {
+            fatalError("Cannot instantiate undefined struct '%s'.", name);
+        }
+
+        Ast[] statementList = structs.get(name).child;
+        HashMap<String, Scalar> members = HashMap.newHashMap(statementList.length);
+
+        for (Ast mem : statementList) {
+            String memName = mem.value.toString();
+            members.put(memName, null);
+        }
+
+        Scalar object = Scalar.makeObject(name, members);
+        result.setType(NodeType.CONSTANT);
+        result.setValue(object);
     }
 
     private void executeVarDeclaration(Ast ast, Node result) {
@@ -295,6 +332,11 @@ public final class Executor {
             return;
         }
 
+        if (var.kind == AstKind.AST_STRUCT_ACCESS) {
+            executeStructAssign(ast, result);
+            return;
+        }
+
         String name = var.value.toString();
         if (!scope.hasSymbol(name)) {
             fatalError("undefined variable '%s'.", name);
@@ -320,10 +362,10 @@ public final class Executor {
         Ast var = ast.child[0];
         Ast expr = ast.child[1];
 
-        var arrayNode = new Node();
-        execute(var, arrayNode);
+        var varNode = new Node();
+        execute(var, varNode);
 
-        if (!arrayNode.hasArrayReference()) {
+        if (!varNode.hasReference()) {
             fatalError("Cannot assign to non-array value using array access syntax.");
         }
 
@@ -334,9 +376,38 @@ public final class Executor {
             fatalError("Expression of type '%s' cannot be assigned as value.", expr.kind);
         }
 
-        ArrayReference reference = arrayNode.getArrayReference();
+        Reference reference = varNode.getReference();
         Scalar value = exprNode.getValue();
-        reference.setArrayValue(value);
+        reference.setValue(value);
+
+        result.setType(NodeType.CONSTANT);
+        result.setValue(value);
+    }
+
+    private void executeStructAssign(Ast ast, Node result) {
+        assert ast.child.length == 2;
+        assert ast.child[0].kind == AstKind.AST_STRUCT_ACCESS;
+
+        Ast var = ast.child[0];
+        Ast expr = ast.child[1];
+
+        var varNode = new Node();
+        execute(var, varNode);
+
+        if (!varNode.hasReference()) {
+            fatalError("Unexpected error: unable to compile struct access operation.");
+        }
+
+        var exprNode = new Node();
+        execute(expr, exprNode);
+
+        if (exprNode.getType() != NodeType.CONSTANT) {
+            fatalError("Expression of type '%s' cannot be assigned as value.", expr.kind);
+        }
+
+        Reference reference = varNode.getReference();
+        Scalar value = exprNode.getValue();
+        reference.setValue(value);
 
         result.setType(NodeType.CONSTANT);
         result.setValue(value);
@@ -364,6 +435,10 @@ public final class Executor {
         execute(var, varNode);
         Scalar array = varNode.getValue();
 
+        if (!array.isArray()) {
+            fatalError("Cannot use array access on non array value.");
+        }
+
         if (idx == null) {
             // Add new "empty" space and return (expecting "arr[] = expr")
             List<Scalar> list = array.toList();
@@ -373,7 +448,7 @@ public final class Executor {
 
             result.setType(NodeType.NONE);
             result.setValue(null);
-            result.setArrayReference(array, newIndex);
+            result.setReference(new ArrayReference(array, newIndex));
             return;
         }
 
@@ -382,16 +457,37 @@ public final class Executor {
         execute(idx, idxNode);
         Scalar index = idxNode.getValue();
 
-        if (!array.isArray()) {
-            fatalError("Cannot use array access on non array value %s.", array.getType());
-        }
-
         var reference = new ArrayReference(array, index);
-        Scalar value = reference.getArrayValue();
+        Scalar value = reference.getValue();
 
         result.setType(NodeType.CONSTANT);
         result.setValue(value);
-        result.setArrayReference(reference);
+        result.setReference(reference);
+    }
+
+    private void executeStructAccess(Ast ast, Node result) {
+        assert ast.child.length == 2;
+        assert ast.child[1].kind == AstKind.AST_IDENTIFIER;
+
+        Ast var = ast.child[0];
+        Ast mem = ast.child[1];
+
+        var varNode = new Node();
+        execute(var, varNode);
+
+        Scalar object = varNode.getValue();
+        String member = mem.value.toString();
+
+        if (!object.isObject()) {
+            fatalError("Attempt to assign property '%s' on non-object value.", member);
+        }
+
+        var reference = new StructReference(object, member);
+        Scalar value = reference.getValue();
+
+        result.setType(NodeType.CONSTANT);
+        result.setValue(value);
+        result.setReference(reference);
     }
 
     private void executeLogicAnd(Ast ast, Node result) {
@@ -409,7 +505,6 @@ public final class Executor {
 
         if (!lhsNode.getValue().toBoolean()) {
             // false && ??
-            // expression is evaluated to false
             result.setType(NodeType.CONSTANT);
             result.setValue(Scalar.makeBool(false));
             return;
@@ -444,7 +539,6 @@ public final class Executor {
 
         if (lhsNode.getValue().toBoolean()) {
             // true || ??
-            // expression is evaluated to true
             result.setType(NodeType.CONSTANT);
             result.setValue(Scalar.makeBool(true));
             return;
@@ -568,8 +662,8 @@ public final class Executor {
 
         Scalar original = varNode.getValue();
 
-        if (original.isArray() || original.isString()) {
-            fatalError("Cannot increment '%s'.", original.getType());
+        if (original.isArray() || original.isString() || original.isObject()) {
+            fatalError("Cannot increment a value of type '%s'.", original.getType());
         }
 
         Scalar modified = switch (ast.kind) {
@@ -579,11 +673,9 @@ public final class Executor {
         };
 
         // Update value
-        if (var.kind == AstKind.AST_ARRAY_ACCESS) {
-            ArrayReference reference = varNode.getArrayReference();
-            Scalar array = reference.getArray();
-            Scalar index = reference.getIndex();
-            array.toList().set((int) index.toLong(), modified);
+        if (varNode.hasReference()) {
+            Reference reference = varNode.getReference();
+            reference.setValue(modified);
         } else {
             String name = var.value.toString();
             scope.setSymbol(name, modified);
@@ -683,16 +775,12 @@ public final class Executor {
 
         Ast var = ast.child[0];
 
-        if (var.kind == AstKind.AST_ARRAY_ACCESS) {
+        if (var.kind == AstKind.AST_ARRAY_ACCESS || var.kind == AstKind.AST_STRUCT_ACCESS) {
             var varNode = new Node();
             execute(var, varNode);
 
-            ArrayReference reference = varNode.getArrayReference();
-            Scalar array = reference.getArray();
-            Scalar index = reference.getIndex();
-
-            // Remove from the list
-            array.toList().remove((int) index.toLong());
+            Reference reference = varNode.getReference();
+            reference.remove();
         } else {
             String name = var.value.toString();
             scope.removeSymbol(name);

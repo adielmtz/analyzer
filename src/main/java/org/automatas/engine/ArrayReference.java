@@ -3,9 +3,9 @@ package org.automatas.engine;
 import java.util.List;
 
 /**
- * Holds a reference to an array index within an Scalar object.
+ * Holds a reference to an array index within a Scalar object.
  */
-public final class ArrayReference {
+public final class ArrayReference implements Reference {
     private final Scalar array;
     private final Scalar index;
 
@@ -44,7 +44,8 @@ public final class ArrayReference {
      *
      * @return The Scalar instance within array located at the position in index.
      */
-    public Scalar getArrayValue() {
+    @Override
+    public Scalar getValue() {
         List<Scalar> list = array.toList();
         int pos = (int) index.toLong();
         return list.get(pos);
@@ -55,9 +56,17 @@ public final class ArrayReference {
      *
      * @param value The value to set at the position specified by the index.
      */
-    public void setArrayValue(Scalar value) {
+    @Override
+    public void setValue(Scalar value) {
         List<Scalar> list = array.toList();
         int pos = (int) index.toLong();
         list.set(pos, value);
+    }
+
+    @Override
+    public void remove() {
+        List<Scalar> list = array.toList();
+        int pos = (int) index.toLong();
+        list.remove(pos);
     }
 }

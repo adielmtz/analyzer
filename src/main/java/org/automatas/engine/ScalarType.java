@@ -8,7 +8,8 @@ public enum ScalarType {
     BOOL,
     FLOAT,
     INT,
-    STRING;
+    STRING,
+    OBJECT;
 
     @Override
     public String toString() {
@@ -22,6 +23,7 @@ public enum ScalarType {
             case "float" -> FLOAT;
             case "int" -> INT;
             case "string" -> STRING;
+            case "object" -> OBJECT;
             default -> null;
         };
     }

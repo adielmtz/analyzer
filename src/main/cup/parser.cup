@@ -1,10 +1,28 @@
 package org.automatas.language;
 
+import java.util.HashMap;
 import java_cup.runtime.Symbol;
 import org.automatas.engine.Ast;
 import org.automatas.engine.AstKind;
 import org.automatas.engine.AstList;
 import org.automatas.engine.ScalarType;
+
+parser code {:
+    private HashMap<String, Ast> declaredStructs = new HashMap<>();
+
+    public HashMap<String, Ast> getDeclaredStructs() {
+        return declaredStructs;
+    }
+
+    private void registerStructDefinition(Ast identifier, Ast members) {
+        String name = identifier.value.toString();
+        if (declaredStructs.containsKey(name)) {
+            throw new RuntimeException(String.format("Parse error: struct '%s' is already defined.", name));
+        }
+
+        declaredStructs.put(name, members);
+    }
+:}
 
 /* Literals */
 terminal boolean BOOL;
@@ -52,6 +70,9 @@ terminal WHILE;
 terminal IF;
 terminal ELSE;
 terminal NOELSE;
+terminal STRUCT;
+terminal NEW;
+terminal PUB;
 
 /* Symbols */
 terminal LPAREN;
@@ -62,6 +83,7 @@ terminal LBRACE;
 terminal RBRACE;
 terminal EXCLAMATION;
 terminal COMMA;
+terminal DOT;
 terminal SEMICOLON;
 
 /* Statements */
@@ -70,6 +92,11 @@ non terminal Ast top_statement;
 non terminal Ast statement;
 non terminal Ast if_statement;
 non terminal Ast if_stmt_without_else;
+
+/* Structs */
+non terminal struct_declaration;
+non terminal Ast struct_member;
+non terminal AstList struct_member_list;
 
 /* Expressions */
 non terminal AstList expr_list;
@@ -82,6 +109,7 @@ non terminal Ast scalar;
 non terminal Ast identifier;
 non terminal Ast variable;
 non terminal Ast array_access;
+non terminal Ast struct_access;
 
 precedence nonassoc DECLARATION;
 precedence nonassoc ASSIGN;
@@ -112,12 +140,27 @@ precedence left IS;
 start with top_statement;
 
 top_statement ::=
-    statement_list:sl                       {: RESULT = sl.makeList(); :}
+    struct_declaration top_statement:ts     {: RESULT = ts; :}
+  | statement_list:sl                       {: RESULT = sl.makeList(); :}
 ;
 
 statement_list ::=
     statement_list:sl statement:s           {: RESULT = sl.add(s); :}
   | /* %empty */                            {: RESULT = AstList.beginList(); :}
+;
+
+struct_declaration ::=
+    STRUCT identifier:i LBRACE struct_member_list:sml RBRACE
+                                            {: registerStructDefinition(i, sml.makeList()); :}
+;
+
+struct_member ::=
+    PUB identifier:i SEMICOLON              {: RESULT = i; :}
+;
+
+struct_member_list ::=
+    struct_member:sm                        {: RESULT = AstList.beginList(sm); :}
+  | struct_member_list:smb struct_member:sm {: RESULT = smb.add(sm); :}
 ;
 
 statement ::=
@@ -182,6 +225,7 @@ expr ::=
   | LEN LPAREN expr:e RPAREN                {: RESULT = Ast.make(AstKind.AST_LEN, e); :}
   | TYPEOF LPAREN expr:e RPAREN             {: RESULT = Ast.make(AstKind.AST_TYPEOF, e); :}
   | INPUT LPAREN optional_expr:oe RPAREN    {: RESULT = Ast.make(AstKind.AST_INPUT, oe); :}
+  | NEW identifier:i                        {: RESULT = Ast.make(AstKind.AST_NEW, i); :}
   | LPAREN expr:e RPAREN                    {: RESULT = e; :}
   | scalar:s                                {: RESULT = s; :}
 ;
@@ -211,11 +255,16 @@ scalar ::=
 variable ::=
     identifier:i                            {: RESULT = i; :}
   | array_access:aa                         {: RESULT = aa; :}
+  | struct_access:sa                        {: RESULT = sa; :}
 ;
 
 array_access ::=
     variable:v LBRACKET optional_expr:oe RBRACKET
                                             {: RESULT = Ast.make(AstKind.AST_ARRAY_ACCESS, v, oe); :}
+;
+
+struct_access ::=
+    variable:v DOT identifier:i             {: RESULT = Ast.make(AstKind.AST_STRUCT_ACCESS, v, i); :}
 ;
 
 array_expr ::=

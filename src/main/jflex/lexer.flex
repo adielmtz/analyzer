@@ -159,6 +159,9 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "foreach"        { return symbol("foreach", Token.FOREACH); }
 <YYINITIAL> "do"             { return symbol("do", Token.DO); }
 <YYINITIAL> "while"          { return symbol("while", Token.WHILE); }
+<YYINITIAL> "struct"         { return symbol("struct", Token.STRUCT); }
+<YYINITIAL> "pub"            { return symbol("pub", Token.PUB); }
+<YYINITIAL> "new"            { return symbol("new", Token.NEW); }
 <YYINITIAL> {Label}          { return label(yytext()); }
 
 /* Symbols */
@@ -166,6 +169,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> ")"|"]"|"}"      { return endNesting(yytext()); }
 <YYINITIAL> "!"              { return symbol(Token.EXCLAMATION); }
 <YYINITIAL> ","              { return symbol(Token.COMMA); }
+<YYINITIAL> "."              { return symbol(Token.DOT); }
 <YYINITIAL> ";"              { return symbol(Token.SEMICOLON); }
 
 /* Logic Operators */

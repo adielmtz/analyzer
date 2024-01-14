@@ -6,8 +6,7 @@ package org.automatas.engine;
 public final class Node {
     private NodeType type;
     private Scalar value;
-
-    private ArrayReference reference;
+    private Reference reference;
 
     /**
      * Node constructor.
@@ -54,39 +53,29 @@ public final class Node {
     }
 
     /**
-     * Tests if the node contains an ArrayReference instance.
+     * Tests if the node contains a Reference instance.
      *
-     * @return True if the node contains an ArrayReference instance; false otherwise.
+     * @return True if the node contains a Reference instance; false otherwise.
      */
-    public boolean hasArrayReference() {
+    public boolean hasReference() {
         return reference != null;
     }
 
     /**
-     * Gets the ArrayReference instance.
+     * Gets the Reference instance.
      *
-     * @return The ArrayReference instance.
+     * @return The Reference instance.
      */
-    public ArrayReference getArrayReference() {
+    public Reference getReference() {
         return reference;
     }
 
     /**
-     * Sets the ArrayReference instance.
+     * Sets the Reference instance.
      *
-     * @param reference The ArrayReference instance to set.
+     * @param reference The Reference instance to set.
      */
-    public void setArrayReference(ArrayReference reference) {
+    public void setReference(Reference reference) {
         this.reference = reference;
-    }
-
-    /**
-     * Creates and sets the ArrayReference instance.
-     *
-     * @param array The array scalar.
-     * @param index The index scalar.
-     */
-    public void setArrayReference(Scalar array, Scalar index) {
-        reference = new ArrayReference(array, index);
     }
 }
