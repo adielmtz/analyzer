@@ -55,6 +55,7 @@ terminal DECREMENT;
 
 /* Keywords */
 terminal PRINT;
+terminal PRINTF;
 terminal PRINTLN;
 terminal UNSET;
 terminal LEN;
@@ -173,6 +174,8 @@ statement ::=
   | FOREACH identifier:i IN expr:e statement:s
                                             {: RESULT = Ast.make(AstKind.AST_FOREACH, i, e, s); :}
   | PRINT print_expr_list:pel SEMICOLON     {: RESULT = pel.makeList(); :}
+  | PRINTF LPAREN expr_list:el RPAREN SEMICOLON
+                                            {: RESULT = Ast.make(AstKind.AST_PRINTF, el.makeArray()); :}
   | PRINTLN expr:e SEMICOLON                {: RESULT = Ast.make(AstKind.AST_PRINTLN, e); :}
   | expr:e SEMICOLON                        {: RESULT = e; :}
   | UNSET variable:v SEMICOLON              {: RESULT = Ast.make(AstKind.AST_UNSET, v); :}

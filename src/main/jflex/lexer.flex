@@ -151,6 +151,7 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "typeof"         { return symbol("typeof", Token.TYPEOF); }
 <YYINITIAL> "unset"          { return symbol("unset", Token.UNSET); }
 <YYINITIAL> "print"          { return symbol("print", Token.PRINT); }
+<YYINITIAL> "printf"         { return symbol("printf", Token.PRINTF); }
 <YYINITIAL> "println"        { return symbol("println", Token.PRINTLN); }
 <YYINITIAL> "input"          { return symbol("input", Token.INPUT); }
 <YYINITIAL> "if"             { return symbol("if", Token.IF); }

@@ -113,6 +113,9 @@ public final class Executor {
             case AST_PRINTLN:
                 executePrint(ast, result);
                 break;
+            case AST_PRINTF:
+                executePrintf(ast, result);
+                break;
             case AST_INPUT:
                 executeInput(ast, result);
                 break;
@@ -738,6 +741,42 @@ public final class Executor {
         if (ast.kind == AstKind.AST_PRINTLN) {
             System.out.println();
         }
+
+        result.setType(NodeType.NONE);
+        result.setValue(null);
+    }
+
+    private void executePrintf(Ast ast, Node result) {
+        assert ast.child.length == 1;
+
+        Ast argList = ast.child[0];
+
+        if (argList.child.length == 0) {
+            fatalError("printf() expects at least 1 argument, 0 given.");
+            return;
+        }
+
+        String fmt = "";
+        Object[] values = new Object[argList.child.length - 1];
+
+        for (int i = 0; i < argList.child.length; i++) {
+            var node = new Node();
+            execute(argList.child[i], node);
+
+            if (node.getType() != NodeType.CONSTANT) {
+                fatalError("Expression '%s' cannot be printed.", argList.child[i].kind);
+            }
+
+            Scalar scalar = node.getValue();
+
+            if (i == 0) {
+                fmt = scalar.toString();
+            } else {
+                values[i - 1] = scalar.getRawValue();
+            }
+        }
+
+        System.out.printf(fmt, values);
 
         result.setType(NodeType.NONE);
         result.setValue(null);

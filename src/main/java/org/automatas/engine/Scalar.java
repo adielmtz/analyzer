@@ -161,6 +161,15 @@ public final class Scalar implements Comparable<Scalar> {
     }
 
     /**
+     * Gets the value as a generic Object.
+     *
+     * @return the raw value.
+     */
+    public Object getRawValue() {
+        return value;
+    }
+
+    /**
      * Returns the Scalar value as a List.
      *
      * @return If the Scalar is an array, the internal List is returned; otherwise a new list is created

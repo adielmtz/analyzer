@@ -50,6 +50,7 @@ public enum AstKind {
     AST_IS,
     AST_NEW,
     AST_PRINT,
+    AST_PRINTF,
     AST_PRINTLN,
     AST_INPUT,
     AST_UNSET,
