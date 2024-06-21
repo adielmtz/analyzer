@@ -150,10 +150,6 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "len"            { return symbol("len", Token.LEN); }
 <YYINITIAL> "typeof"         { return symbol("typeof", Token.TYPEOF); }
 <YYINITIAL> "unset"          { return symbol("unset", Token.UNSET); }
-<YYINITIAL> "print"          { return symbol("print", Token.PRINT); }
-<YYINITIAL> "printf"         { return symbol("printf", Token.PRINTF); }
-<YYINITIAL> "println"        { return symbol("println", Token.PRINTLN); }
-<YYINITIAL> "input"          { return symbol("input", Token.INPUT); }
 <YYINITIAL> "if"             { return symbol("if", Token.IF); }
 <YYINITIAL> "else"           { return symbol("else", Token.ELSE); }
 <YYINITIAL> "for"            { return symbol("for", Token.FOR); }
@@ -163,6 +159,8 @@ CommentContent       = ([^*]|\*+[^/*])*
 <YYINITIAL> "struct"         { return symbol("struct", Token.STRUCT); }
 <YYINITIAL> "pub"            { return symbol("pub", Token.PUB); }
 <YYINITIAL> "new"            { return symbol("new", Token.NEW); }
+<YYINITIAL> "fn"             { return symbol("fn", Token.FN); }
+<YYINITIAL> "return"         { return symbol("return", Token.RETURN); }
 <YYINITIAL> {Label}          { return label(yytext()); }
 
 /* Symbols */

@@ -15,6 +15,8 @@ public enum AstKind {
     AST_ARRAY,
     AST_ARRAY_ACCESS,
     AST_STRUCT_ACCESS,
+    AST_CALL,
+    AST_RETURN,
 
     /* Logic operators */
     AST_DECLARATION,
@@ -49,10 +51,6 @@ public enum AstKind {
     AST_AS,
     AST_IS,
     AST_NEW,
-    AST_PRINT,
-    AST_PRINTF,
-    AST_PRINTLN,
-    AST_INPUT,
     AST_UNSET,
     AST_IF,
     AST_IF_ELSE,

@@ -1,6 +1,7 @@
 package org.automatas.engine;
 
 import java.util.HashMap;
+import java.util.Stack;
 
 /**
  * Manages the scope of variables (symbols).
@@ -16,6 +17,8 @@ public final class ScopeManager {
         }
     }
 
+    private Stack<Scope> stack = new Stack<>();
+
     private Scope current;
 
     /**
@@ -25,6 +28,15 @@ public final class ScopeManager {
      */
     public boolean hasActiveScope() {
         return current != null;
+    }
+
+    public void push() {
+        stack.push(current);
+        current = new Scope(null);
+    }
+
+    public void pop() {
+        current = stack.pop();
     }
 
     /**

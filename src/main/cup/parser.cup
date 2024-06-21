@@ -6,12 +6,18 @@ import org.automatas.engine.Ast;
 import org.automatas.engine.AstKind;
 import org.automatas.engine.AstList;
 import org.automatas.engine.ScalarType;
+import org.automatas.engine.UserFunction;
 
 parser code {:
     private HashMap<String, Ast> declaredStructs = new HashMap<>();
+    private HashMap<String, UserFunction> declaredFunctions = new HashMap<>();
 
     public HashMap<String, Ast> getDeclaredStructs() {
         return declaredStructs;
+    }
+
+    public HashMap<String, UserFunction> getDeclaredFunctions() {
+        return declaredFunctions;
     }
 
     private void registerStructDefinition(Ast identifier, Ast members) {
@@ -21,6 +27,21 @@ parser code {:
         }
 
         declaredStructs.put(name, members);
+    }
+
+    private void registerFunction(Ast identifier, Ast argList, Ast body) {
+        String name = identifier.value.toString();
+        if (declaredFunctions.containsKey(name)) {
+            throw new RuntimeException(String.format("Parse error: function '%s' is already defined.", name));
+        }
+
+        String[] params = new String[argList.child.length];
+        for (int i = 0; i < argList.child.length; i++) {
+            params[i] = argList.child[i].value.toString();
+        }
+
+        var func = new UserFunction(name, params, body);
+        declaredFunctions.put(name, func);
     }
 :}
 
@@ -54,16 +75,12 @@ terminal INCREMENT;
 terminal DECREMENT;
 
 /* Keywords */
-terminal PRINT;
-terminal PRINTF;
-terminal PRINTLN;
 terminal UNSET;
 terminal LEN;
 terminal TYPEOF;
 terminal AS;
 terminal IS;
 terminal IN;
-terminal INPUT;
 terminal FOR;
 terminal FOREACH;
 terminal DO;
@@ -72,6 +89,8 @@ terminal IF;
 terminal ELSE;
 terminal NOELSE;
 terminal STRUCT;
+terminal FN;
+terminal RETURN;
 terminal NEW;
 terminal PUB;
 
@@ -101,16 +120,17 @@ non terminal AstList struct_member_list;
 
 /* Expressions */
 non terminal AstList expr_list;
-non terminal AstList print_expr_list;
+non terminal AstList parameter_list;
+non terminal AstList non_empty_parameter_list;
 non terminal Ast expr;
 non terminal Ast array_expr;
-non terminal Ast print_expr;
 non terminal Ast optional_expr;
 non terminal Ast scalar;
 non terminal Ast identifier;
 non terminal Ast variable;
 non terminal Ast array_access;
 non terminal Ast struct_access;
+non terminal Ast function_call;
 
 precedence nonassoc DECLARATION;
 precedence nonassoc ASSIGN;
@@ -137,6 +157,8 @@ precedence left AND;
 precedence left OR;
 precedence left AS;
 precedence left IS;
+precedence left LPAREN;
+precedence left RPAREN;
 
 start with top_statement;
 
@@ -153,6 +175,8 @@ statement_list ::=
 struct_declaration ::=
     STRUCT identifier:i LBRACE struct_member_list:sml RBRACE
                                             {: registerStructDefinition(i, sml.makeList()); :}
+  | FN identifier:i LPAREN parameter_list:pl RPAREN LBRACE statement_list:sl RBRACE
+                                            {: registerFunction(i, pl.makeArray(), sl.makeList()); :}
 ;
 
 struct_member ::=
@@ -173,12 +197,9 @@ statement ::=
                                             {: RESULT = Ast.make(AstKind.AST_FOR, a, b, c, s); :}
   | FOREACH identifier:i IN expr:e statement:s
                                             {: RESULT = Ast.make(AstKind.AST_FOREACH, i, e, s); :}
-  | PRINT print_expr_list:pel SEMICOLON     {: RESULT = pel.makeList(); :}
-  | PRINTF LPAREN expr_list:el RPAREN SEMICOLON
-                                            {: RESULT = Ast.make(AstKind.AST_PRINTF, el.makeArray()); :}
-  | PRINTLN expr:e SEMICOLON                {: RESULT = Ast.make(AstKind.AST_PRINTLN, e); :}
   | expr:e SEMICOLON                        {: RESULT = e; :}
   | UNSET variable:v SEMICOLON              {: RESULT = Ast.make(AstKind.AST_UNSET, v); :}
+  | RETURN optional_expr:oe SEMICOLON       {: RESULT = Ast.make(AstKind.AST_RETURN, oe); :}
 ;
 
 if_stmt_without_else ::=
@@ -189,15 +210,6 @@ if_statement ::=
     if_stmt_without_else:iswe               {: RESULT = iswe; :} %prec NOELSE
   | if_stmt_without_else:iswe ELSE statement:s
                                             {: RESULT = Ast.make(AstKind.AST_IF_ELSE, iswe, s); :}
-;
-
-print_expr_list ::=
-    print_expr_list:pel COMMA print_expr:pe {: RESULT = pel.add(pe); :}
-  | print_expr:pe                           {: RESULT = AstList.beginList(pe); :}
-;
-
-print_expr ::=
-    expr:e                                  {: RESULT = Ast.make(AstKind.AST_PRINT, e); :}
 ;
 
 expr ::=
@@ -223,11 +235,11 @@ expr ::=
   | expr:a GREATER expr:b                   {: RESULT = Ast.make(AstKind.AST_GREATER, a, b); :}
   | expr:a GREATER_OR_EQUAL expr:b          {: RESULT = Ast.make(AstKind.AST_GREATER_OR_EQUAL, a, b); :}
   | EXCLAMATION expr:e                      {: RESULT = Ast.make(AstKind.AST_BOOL_NOT, e); :}
+  | function_call:fc                        {: RESULT = fc; :}
   | expr:e AS identifier:i                  {: RESULT = Ast.typeCast(e, i); :}
   | expr:e IS identifier:i                  {: RESULT = Ast.typeCheck(e, i); :}
   | LEN LPAREN expr:e RPAREN                {: RESULT = Ast.make(AstKind.AST_LEN, e); :}
   | TYPEOF LPAREN expr:e RPAREN             {: RESULT = Ast.make(AstKind.AST_TYPEOF, e); :}
-  | INPUT LPAREN optional_expr:oe RPAREN    {: RESULT = Ast.make(AstKind.AST_INPUT, oe); :}
   | NEW identifier:i                        {: RESULT = Ast.make(AstKind.AST_NEW, i); :}
   | LPAREN expr:e RPAREN                    {: RESULT = e; :}
   | scalar:s                                {: RESULT = s; :}
@@ -243,6 +255,17 @@ expr_list ::=
   | optional_expr:oe                        {: RESULT = AstList.beginList(oe); :}
 ;
 
+parameter_list ::=
+    non_empty_parameter_list:nepl           {: RESULT = nepl; :}
+  | /* %empty */                            {: RESULT = AstList.beginList(); :}
+;
+
+non_empty_parameter_list ::=
+    identifier:i                            {: RESULT = AstList.beginList(i); :}
+  | non_empty_parameter_list:nepl COMMA identifier:i
+                                            {: RESULT = nepl.add(i); :}
+;
+
 identifier ::=
     LABEL:l                                 {: RESULT = Ast.identifier(l); :}
 ;
@@ -253,6 +276,10 @@ scalar ::=
   | INTEGER:i                               {: RESULT = Ast.scalar(i, ScalarType.INT); :}
   | STRING:s                                {: RESULT = Ast.scalar(s, ScalarType.STRING); :}
   | array_expr:ae                           {: RESULT = ae; :}
+;
+
+function_call ::=
+    identifier:i LPAREN expr_list:el RPAREN {: RESULT = Ast.make(AstKind.AST_CALL, i, el.makeArray()); :}
 ;
 
 variable ::=

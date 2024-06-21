@@ -34,6 +34,10 @@ public final class Node {
         this.type = type;
     }
 
+    public boolean hasValue() {
+        return value != null;
+    }
+
     /**
      * Gets the Scalar value set by the execution node.
      *
@@ -77,5 +81,33 @@ public final class Node {
      */
     public void setReference(Reference reference) {
         this.reference = reference;
+    }
+
+    public boolean mustReturn() {
+        return type == NodeType.RETURN || type == NodeType.ERROR;
+    }
+
+    public void propagateTo(Node node) {
+        node.type = type;
+        node.value = value;
+        node.reference = reference;
+    }
+
+    public boolean hasError() {
+        return type == NodeType.ERROR;
+    }
+
+    public void raiseError(String fmt, Object ...args) {
+        type = NodeType.ERROR;
+        value = Scalar.makeString(String.format(fmt, args));
+    }
+
+    public void fnReturn() {
+        fnReturn(null);
+    }
+
+    public void fnReturn(Scalar value) {
+        this.type = NodeType.RETURN;
+        this.value = value;
     }
 }

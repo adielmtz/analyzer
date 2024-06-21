@@ -5,10 +5,7 @@ import java_cup.runtime.Symbol;
 import org.automatas.language.Lexer;
 import org.automatas.language.Parser;
 
-import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +13,13 @@ import java.util.List;
 public final class Executor {
     private final ScopeManager scope = new ScopeManager();
     private HashMap<String, Ast> structs;
+    private HashMap<String, UserFunction> userFunctions;
+    private final HashMap<String, FunctionHandler> handlers;
+
+    public Executor() {
+        handlers = new HashMap<>();
+        BuiltInFunctions.loadBuiltIns(handlers);
+    }
 
     public void executeFile(String filename) {
         try (var reader = new FileReader(filename)) {
@@ -26,6 +30,7 @@ public final class Executor {
             Symbol result = parser.parse();
             Ast root = (Ast) result.value;
             structs = parser.getDeclaredStructs();
+            userFunctions = parser.getDeclaredFunctions();
             execute(root, new Node());
         } catch (Exception e) {
             e.printStackTrace();
@@ -62,6 +67,12 @@ public final class Executor {
                 break;
             case AST_STRUCT_ACCESS:
                 executeStructAccess(ast, result);
+                break;
+            case AST_CALL:
+                executeCall(ast, result);
+                break;
+            case AST_RETURN:
+                executeReturn(ast, result);
                 break;
             case AST_AND:
                 executeLogicAnd(ast, result);
@@ -109,16 +120,6 @@ public final class Executor {
             case AST_NEW:
                 executeNewInstance(ast, result);
                 break;
-            case AST_PRINT:
-            case AST_PRINTLN:
-                executePrint(ast, result);
-                break;
-            case AST_PRINTF:
-                executePrintf(ast, result);
-                break;
-            case AST_INPUT:
-                executeInput(ast, result);
-                break;
             case AST_UNSET:
                 executeUnset(ast, result);
                 break;
@@ -151,12 +152,14 @@ public final class Executor {
         for (Ast statement : ast.child) {
             var node = new Node();
             execute(statement, node);
+
+            if (node.mustReturn()) {
+                node.propagateTo(result);
+                break;
+            }
         }
 
         scope.endBlock();
-
-        result.setType(NodeType.NONE);
-        result.setValue(null);
     }
 
     private void executeScalar(Ast ast, Node result) {
@@ -495,6 +498,93 @@ public final class Executor {
         result.setReference(reference);
     }
 
+    private void executeCall(Ast ast, Node result) {
+        assert ast.child.length == 2;
+
+        Ast funcName = ast.child[0];
+        Ast funcArgs = ast.child[1];
+
+        String name = funcName.value.toString();
+
+        var arguments = new Node();
+        execute(funcArgs, arguments);
+
+        if (arguments.getType() != NodeType.CONSTANT) {
+            fatalError("Expression of type '%s' is an invalid argument list.", funcArgs.kind);
+        }
+
+        List<Scalar> argList = arguments.getValue().toList();
+        var callResult = new Node();
+
+        if (handlers.containsKey(name)) {
+            FunctionHandler handler = handlers.get(name);
+            handler.call(callResult, argList);
+        } else if (userFunctions.containsKey(name)) {
+            UserFunction func = userFunctions.get(name);
+
+            // Validate argument count
+            String[] params = func.getParameters();
+            if (argList.size() < params.length) {
+                fatalError("Too few arguments: %s() expects %d arguments, %d provided.", name, params.length, argList.size());
+                return;
+            }
+
+            // Create stack frame for the function
+            scope.push();
+
+            // Pass arguments
+            for (int i = 0; i < params.length; i++) {
+                scope.addSymbol(params[i], argList.get(i));
+            }
+
+            // Do call
+            Ast body = func.getBody();
+            execute(body, callResult);
+
+            // Restore stack
+            scope.pop();
+        } else {
+            fatalError("Call to undefined function '%s'.", name);
+            return;
+        }
+
+        if (callResult.hasError()) {
+            String error = callResult.getValue().toString();
+            fatalError(error);
+            return;
+        }
+
+        result.setType(NodeType.NONE);
+        result.setValue(null);
+
+        if (callResult.getType() == NodeType.RETURN && callResult.hasValue()) {
+            result.setType(NodeType.CONSTANT);
+            result.setValue(callResult.getValue());
+        }
+    }
+
+    private void executeReturn(Ast ast, Node result) {
+        assert ast.child.length == 1;
+
+        Ast expr = ast.child[0];
+        Scalar value = null;
+
+        /* TODO: Add callstack validation logic */
+
+        if (expr != null) {
+            var exprNode = new Node();
+            execute(expr, exprNode);
+
+            if (exprNode.getType() != NodeType.CONSTANT) {
+                fatalError("Cannot return non-constant expression %s.", expr.kind);
+            }
+
+            value = exprNode.getValue();
+        }
+
+        result.fnReturn(value);
+    }
+
     private void executeLogicAnd(Ast ast, Node result) {
         assert ast.child.length == 2;
 
@@ -723,94 +813,6 @@ public final class Executor {
         result.setValue(length);
     }
 
-    private void executePrint(Ast ast, Node result) {
-        assert ast.child.length == 1;
-
-        Ast expr = ast.child[0];
-
-        var exprNode = new Node();
-        execute(expr, exprNode);
-
-        if (exprNode.getType() != NodeType.CONSTANT) {
-            fatalError("Expression '%s' cannot be printed.", expr.kind);
-        }
-
-        String value = exprNode.getValue().toString();
-        System.out.print(value);
-
-        if (ast.kind == AstKind.AST_PRINTLN) {
-            System.out.println();
-        }
-
-        result.setType(NodeType.NONE);
-        result.setValue(null);
-    }
-
-    private void executePrintf(Ast ast, Node result) {
-        assert ast.child.length == 1;
-
-        Ast argList = ast.child[0];
-
-        if (argList.child.length == 0) {
-            fatalError("printf() expects at least 1 argument, 0 given.");
-            return;
-        }
-
-        String fmt = "";
-        Object[] values = new Object[argList.child.length - 1];
-
-        for (int i = 0; i < argList.child.length; i++) {
-            var node = new Node();
-            execute(argList.child[i], node);
-
-            if (node.getType() != NodeType.CONSTANT) {
-                fatalError("Expression '%s' cannot be printed.", argList.child[i].kind);
-            }
-
-            Scalar scalar = node.getValue();
-
-            if (i == 0) {
-                fmt = scalar.toString();
-            } else {
-                values[i - 1] = scalar.getRawValue();
-            }
-        }
-
-        System.out.printf(fmt, values);
-
-        result.setType(NodeType.NONE);
-        result.setValue(null);
-    }
-
-    private void executeInput(Ast ast, Node result) {
-        assert ast.child.length == 1;
-
-        Ast expr = ast.child[0];
-
-        if (expr != null) {
-            var node = new Node();
-            execute(expr, node);
-
-            if (node.getType() != NodeType.CONSTANT) {
-                fatalError("Expression '%s' cannot be printed.", expr.kind);
-            }
-
-            String prompt = node.getValue().toString();
-            System.out.print(prompt);
-        }
-
-        try {
-            var reader = new BufferedReader(new InputStreamReader(System.in));
-            String input = reader.readLine();
-
-            Scalar value = Scalar.makeString(input);
-            result.setType(NodeType.CONSTANT);
-            result.setValue(value);
-        } catch (IOException e) {
-            fatalError("stdin failure.");
-        }
-    }
-
     private void executeUnset(Ast ast, Node result) {
         assert ast.child.length == 1;
 
@@ -844,10 +846,17 @@ public final class Executor {
 
         if (condNode.getValue().toBoolean()) {
             scope.beginBlock();
-            execute(stmt, new Node());
-            scope.endBlock();
 
+            var node = new Node();
+            execute(stmt, node);
+
+            scope.endBlock();
             executed = true;
+
+            if (node.mustReturn()) {
+                node.propagateTo(result);
+                return;
+            }
         }
 
         result.setType(NodeType.TMP_VALUE);
@@ -865,10 +874,18 @@ public final class Executor {
         execute(ifstmt, ifstmtNode);
 
         if (!ifstmtNode.getValue().toBoolean()) {
-            // if was not executed, thus execute else
+            // execute 'else' block if needed
             scope.beginBlock();
-            execute(elstmt, new Node());
+
+            var node = new Node();
+            execute(elstmt, node);
+
             scope.endBlock();
+
+            if (node.mustReturn()) {
+                node.propagateTo(result);
+                return;
+            }
         }
 
         result.setType(NodeType.NONE);
@@ -895,6 +912,11 @@ public final class Executor {
             scope.beginBlock();
             execute(stmt, stmtOp);
             scope.endBlock();
+
+            if (stmtOp.mustReturn()) {
+                stmtOp.propagateTo(result);
+                return;
+            }
 
             execute(step, stepOp);
             execute(cond, condOp);
@@ -935,8 +957,16 @@ public final class Executor {
         for (Scalar value : array) {
             scope.beginBlock();
             scope.setSymbol(name, value);
-            execute(stmt, new Node());
+
+            var node = new Node();
+            execute(stmt, node);
+
             scope.endBlock();
+
+            if (node.mustReturn()) {
+                node.propagateTo(result);
+                return;
+            }
         }
 
         result.setType(NodeType.NONE);
@@ -956,6 +986,11 @@ public final class Executor {
             scope.beginBlock();
             execute(stmt, stmtOp);
             scope.endBlock();
+
+            if (stmtOp.mustReturn()) {
+                stmtOp.propagateTo(result);
+                return;
+            }
 
             execute(expr, exprOp);
         } while (exprOp.getValue().toBoolean());
@@ -978,6 +1013,11 @@ public final class Executor {
             scope.beginBlock();
             execute(stmt, stmtOp);
             scope.endBlock();
+
+            if (stmtOp.mustReturn()) {
+                stmtOp.propagateTo(result);
+                return;
+            }
 
             execute(expr, exprOp);
         }
