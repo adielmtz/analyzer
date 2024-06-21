@@ -888,8 +888,9 @@ public final class Executor {
             }
         }
 
-        result.setType(NodeType.NONE);
-        result.setValue(null);
+        if (ifstmtNode.mustReturn()) {
+            ifstmtNode.propagateTo(result);
+        }
     }
 
     private void executeForStatement(Ast ast, Node result) {
