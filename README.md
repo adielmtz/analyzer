@@ -44,37 +44,37 @@ Numeric literals can be expressed in various forms:
 Use the `:=` operator (borrowed from Go) to declare a new variable in the current scope.
 
 ```
-my_var := "Hello";
+var := "Hello";
 ```
 
 The interpreter will throw a fatal error if you attempt to re-declare a variable within the same scope.
 
 ```
-my_var := "Again!"; // Fatal Error: 'my_var' is already defined.
+var := "Again!"; // Fatal Error: 'var' is already defined.
 ```
 
 However, you can declare a variable with the same identifier (name) within a nested scope.
 
 ```
-my_var := "Outer";
+var := "Outer";
 
 {
     // This is allowed, as the inner-most variable
     // shadows the variable in the parent scope.
-    my_var := "Inner";
-    println my_var;
+    var := "Inner";
+    print(var);
 }
 
-println my_var;
+print(var);
 ```
 
 ### Using a variable
 
-Variables can be assigned a value with the `=` operator.
+Variables can be re-assigned a value with the `=` operator.
 
 ```
-my_var = "Hello there";
-println my_var;
+var = "Hello there";
+print(var);
 ```
 
 And the interpreter will throw a fatal error if the variable is undefined.
@@ -86,11 +86,11 @@ unknown = "???"; // Fatal Error: undefined variable 'unknown'.
 Variables can store any type of value at any moment:
 
 ```
-my_var = [1, 2, 3];
-my_var = true;
-my_var = 3.1415;
-my_var = 2023;
-my_var = "A113";
+var = [1, 2, 3];
+var = true;
+var = 3.1415;
+var = 2023;
+var = "A113";
 ```
 
 The `is` operator checks if the given value is of a specific type, while the `as` operator
@@ -98,19 +98,19 @@ casts the value from one type to another:
 
 ```
 // Check if the value is an string
-if my_var is string {
+if var is string {
 
-    // Cast value to integer
-    my_int := my_var as int;
+   // Cast to integer
+   casted = var as int;
 
 }
 ```
 
-Use the `delete` operator to _delete_ a variable:
+Use the `unset` operator to _remove_ a variable:
 
 ```
-delete my_var;
-println my_var; // Fatal Error: undefined variable 'my_var'.
+unset var;
+print(var); // Fatal Error: undefined variable 'var'.
 ```
 
 Arrays follow the usual bracket-style syntax:
@@ -126,16 +126,17 @@ Arrays grow dynamically, so you can append values by using the `[]` syntax (borr
 ```
 arr := []; // Empty array
 arr[] = "hi"; // Append a string (note that you have to use = operator).
-println arr[0];
+print(arr[0]);
 ```
 
-And with the `delete` operator, you can delete one value from the array (the array will be re-indexed):
+And with the `unset` operator, you can remove one value from the array (the array will be re-indexed):
 
 ```
 arr := ["a", "b", "c"];
-println arr[0]; // "a"
-delete arr[0];
-println arr[0]; // "b"
+
+print(arr[0]); // "a"
+unset arr[0];
+print(arr[0]); // "b"
 ```
 
 ## Logic operators
@@ -202,16 +203,42 @@ for declaration; condition; step {
 
 *There's no `break` or `continue` keywords yet.*
 
-### Print / Println
+### BuiltIn functions
 
-`print` prints a list of expressions to the standard output.
-`println` prints a single expression to the standard output, followed by a line break.
+`print` prints to STDOUT followed by a `\n`.
+
+`printf` prints a formatted string to STDOUT.
+
+`input` gets input from STDIN optionally printing a prompt message.
 
 ```
-print "a", "b", "c"; // output: abc
-println "Hello!";    // output: "Hello!\n"
+print("This program tells you if your number is even or odd.");
 
-// These two statements are equivalent:
-print "Waah\n";
-println "Waah";
+number := input("Number: ") as int;
+
+if number % 2 == 0 {
+    printf("Your number %d is even!\n", number);
+} else {
+    printf("Your number %d is odd!\n", number);
+}
+```
+
+### Functions
+
+Using the `fn` keyword you can declare your own functions!
+
+```
+
+fn fib(n)
+{
+    if n <= 1 {
+        return n;
+    }
+
+    return fib(n - 1) + fib(n - 2);
+}
+
+n := fib(10);
+printf("Fibonacci of 10 is: %d\n", n);
+
 ```

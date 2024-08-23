@@ -1,87 +1,11 @@
-// Line comment
+fn fib(n)
+{
+    if n <= 1 {
+        return n;
+    }
 
-/*
-  Block comment
- */
-
-/**
- * Doc comment
- */
-
-// Variables:
-myvar := 10; // Declaration. Throws error if 'myvar' is already defined.
-myvar = 2;   // Assignment.  Throws error if 'myvar' is undefined.
-unset myvar; // Var destroy. Returns true if 'myvar' was defined.
-
-// Types:
-string := "Waaah!";  // java.lang.String
-int    := 40;        // java.lang.Long
-float  := 3.141592;  // java.lang.Double
-bool   := true;      // java.lang.Boolean
-array  := [1, 2, 3]; // java.util.List<Scalar>
-
-// Print statement
-print "no automatic newline\n";
-println string;
-println "string literal";
-println array[0];
-
-// Functions
-a := len("string");  // String length
-b := len([1, 2, 3]); // Array count
-
-// Arithmetic operations:
-addition       := 5 + 2;
-concatenation  := "hello" + " agent " + 47;
-subtraction    := 5 - 10;
-multiplication := 9 * 23;
-power          := 2 ** 64;
-division       := 4 / 2;
-modulo         := 10 % 2;
-
-// Logic operators (returns boolean)
-and         := true && false;
-or          := false || true;
-equals      := 1 == 1;
-notequals   := 1 != 0;
-less        := 1 < 0;
-greater     := 1 > 0;
-lessOrEq    := 1 <= 0;
-greaterOrEq := 1 >= 0;
-
-// Increment/Decrement:
-preIncrement  := 0;
-postIncrement := 0;
-preDecrement  := 0;
-postDecrement := 0;
-
-println ++preIncrement;
-println postIncrement++;
-
-println --preDecrement;
-println postDecrement--;
-
-// If statement
-if true {
-    println "is true!";
+    return fib(n - 1) + fib(n - 2);
 }
 
-// If-else statement
-name := "foo";
-if name == "foo" {
-    println "Foo found!";
-} else {
-    println "Bar found?";
-}
-
-// For loop
-for i := 0; i < 10; i++ {
-    println i;
-}
-
-// While loop
-var := 100;
-while var > 0 {
-    println var;
-    var--;
-}
+n := fib(10);
+printf("Fibonacci of 10 is: %d\n", n);
