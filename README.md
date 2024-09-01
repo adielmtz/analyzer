@@ -70,7 +70,7 @@ print(var);
 
 ### Using a variable
 
-Variables can be re-assigned a value with the `=` operator.
+Variables can be re-assigned with the `=` operator.
 
 ```
 var = "Hello there";
@@ -97,11 +97,11 @@ The `is` operator checks if the given value is of a specific type, while the `as
 casts the value from one type to another:
 
 ```
-// Check if the value is an string
+// Check if the value is a string
 if var is string {
 
    // Cast to integer
-   casted = var as int;
+   casted := var as int;
 
 }
 ```
