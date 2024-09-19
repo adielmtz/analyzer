@@ -9,6 +9,24 @@ This project was made for study and research about compiler construction.
 2. This project began as a lexical analysis tool; the parser and interpreter were added later on.
    _I may rename it in the future_
 
+## Dependencies
+1. Maven
+2. jflex 1.9
+3. cup 11b
+
+## Build
+Run `maven compile` to generate the lexer & parser classes.
+The resulting java files should be inside of `${project.build.directory}/generated-sources`. Mark that folder as "Generated Sources Root" (if you're using IntelliJ).
+
+## Run the interpreter
+Navigate to `src/main/java/org/automatas/program/Main.java` and edit the main method.
+
+Edit it to set your custom path to a source file (eg: `engine.executeFile("path/to/source.txt")`).
+
+`code.txt` contains a sample code that can be run by the interpreter.
+
+Run the `main()` method and done!
+
 ## Types
 
 The language supports these primitive types:
